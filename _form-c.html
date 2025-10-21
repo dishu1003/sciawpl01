@@ -1,0 +1,419 @@
+<!DOCTYPE html>\
+<html lang="en">\
+<head>\
+<meta charset="UTF-8">\
+<meta name="viewport" content="width=device-width, initial-scale=1.0">\
+<title>Form C: Commitment & Qualification</title>\
+<style>\
+\* {\
+margin: 0;\
+padding: 0;\
+box-sizing: border-box;\
+}\
+body {\
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;\
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\
+min-height: 100vh;\
+display: flex;\
+align-items: center;\
+justify-content: center;\
+padding: 20px;\
+}\
+.form-container {\
+background: white;\
+border-radius: 16px;\
+box-shadow: 0 20px 60px rgba(0,0,0,0.3);\
+max-width: 600px;\
+width: 100%;\
+padding: 40px;\
+animation: slideIn 0.5s ease-out;\
+}\
+@keyframes slideIn {\
+from {\
+opacity: 0;\
+transform: translateY(30px);\
+}\
+to {\
+opacity: 1;\
+transform: translateY(0);\
+}\
+}\
+.form-header {\
+text-align: center;\
+margin-bottom: 30px;\
+}\
+.form-header h1 {\
+color: #333;\
+font-size: 24px;\
+margin-bottom: 10px;\
+}\
+.form-header p {\
+color: #666;\
+font-size: 14px;\
+line-height: 1.6;\
+}\
+.progress-bar {\
+height: 6px;\
+background: #e0e0e0;\
+border-radius: 10px;\
+margin-bottom: 30px;\
+overflow: hidden;\
+}\
+.progress-fill {\
+height: 100%;\
+background: linear-gradient(90deg, #667eea, #764ba2);\
+width: 75%;\
+transition: width 0.3s ease;\
+}\
+.form-group {\
+margin-bottom: 25px;\
+}\
+label {\
+display: block;\
+color: #333;\
+font-weight: 600;\
+margin-bottom: 8px;\
+font-size: 15px;\
+}\
+.required {\
+color: #e74c3c;\
+margin-left: 4px;\
+}\
+select,\
+textarea {\
+width: 100%;\
+padding: 12px 16px;\
+border: 2px solid #e0e0e0;\
+border-radius: 8px;\
+font-size: 15px;\
+transition: all 0.3s ease;\
+font-family: inherit;\
+}\
+select:focus,\
+textarea:focus {\
+outline: none;\
+border-color: #667eea;\
+box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);\
+}\
+textarea {\
+resize: vertical;\
+min-height: 100px;\
+}\
+.submit-btn {\
+width: 100%;\
+padding: 16px;\
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\
+color: white;\
+border: none;\
+border-radius: 8px;\
+font-size: 16px;\
+font-weight: 600;\
+cursor: pointer;\
+transition: transform 0.2s ease, box-shadow 0.2s ease;\
+}\
+.submit-btn:hover {\
+transform: translateY(-2px);\
+box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);\
+}\
+.error-message {\
+color: #e74c3c;\
+font-size: 13px;\
+margin-top: 5px;\
+display: none;\
+}\
+.success-modal {\
+display: none;\
+position: fixed;\
+top: 0;\
+left: 0;\
+width: 100%;\
+height: 100%;\
+background: rgba(0,0,0,0.7);\
+z-index: 1000;\
+align-items: center;\
+justify-content: center;\
+}\
+.success-content {\
+background: white;\
+padding: 40px;\
+border-radius: 16px;\
+text-align: center;\
+max-width: 500px;\
+margin: 20px;\
+animation: slideIn 0.5s ease-out;\
+}\
+.success-content h2 {\
+color: #27ae60;\
+margin-bottom: 15px;\
+}\
+.success-content p {\
+color: #666;\
+margin-bottom: 25px;\
+line-height: 1.6;\
+}\
+.success-btn {\
+padding: 14px 30px;\
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\
+color: white;\
+border: none;\
+border-radius: 8px;\
+font-size: 16px;\
+font-weight: 600;\
+cursor: pointer;\
+text-decoration: none;\
+display: inline-block;\
+}\
+.warning-box {\
+background: #fff3cd;\
+border-left: 4px solid #ffc107;\
+padding: 15px;\
+margin-bottom: 20px;\
+border-radius: 8px;\
+}\
+.warning-box p {\
+color: #856404;\
+font-size: 14px;\
+margin: 0;\
+}\
+@media (max-width: 600px) {\
+.form-container {\
+padding: 25px;\
+}\
+.form-header h1 {\
+font-size: 20px;\
+}\
+}\
+</style>\
+</head>\
+<body>\
+<div class="form-container">\
+<div class="form-header">\
+<h1>Strategy Qualifier: Step 3 of 4<br>(रणनीति योग्यता: स्टेप 3 ऑफ़ 4)</h1>\
+<p>This quick form confirms your readiness to invest time and resources into the solution.<br>(यह फॉर्म समाधान में समय और संसाधनों का निवेश करने की आपकी तत्परता की पुष्टि करता है।)</p>\
+</div>
+
+```
+    <div class="progress-bar">
+        <div class="progress-fill"></div>
+    </div>
+
+    <form id="qualificationForm">
+        <div class="form-group">
+            <label for="timeCommitment">
+                क्या आप इस समाधान को अगले 30 दिनों के भीतर लागू करने के लिए दिन में कम से कम 1 घंटा देने को तैयार हैं?
+                <span class="required">*</span>
+            </label>
+            <select id="timeCommitment" name="timeCommitment" required>
+                <option value="">-- Select an option --</option>
+                <option value="yes">Yes, absolutely. (हाँ, बिल्कुल।)</option>
+                <option value="no">No, not right now. (नहीं, अभी नहीं।)</option>
+            </select>
+            <div class="error-message" id="timeCommitmentError">Please select an option</div>
+        </div>
+
+        <div class="form-group">
+            <label for="decisionMaker">
+                इस समाधान को खरीदने का अंतिम निर्णय लेने का अधिकार किसके पास है?
+                <span class="required">*</span>
+            </label>
+            <select id="decisionMaker" name="decisionMaker" required>
+                <option value="">-- Select an option --</option>
+                <option value="myself">मैं स्वयं (I myself)</option>
+                <option value="partner">मेरा पार्टनर (My Partner)</option>
+                <option value="boss">बॉस/टीम (Boss/Team)</option>
+                <option value="other">अन्य (Other)</option>
+            </select>
+            <div class="error-message" id="decisionMakerError">Please select who makes the decision</div>
+        </div>
+
+        <div class="form-group">
+            <label for="budget">
+                इस समाधान के लिए आपका अनुमानित निवेश बजट क्या है?
+                <span class="required">*</span>
+            </label>
+            <select id="budget" name="budget" required>
+                <option value="">-- Select an option --</option>
+                <option value="10k-25k">₹10k - ₹25k</option>
+                <option value="25k-50k">₹25k - ₹50k</option>
+                <option value="50k+">₹50k+</option>
+                <option value="not-sure">Not sure yet</option>
+            </select>
+            <div class="error-message" id="budgetError">Please select your budget range</div>
+        </div>
+
+        <div class="form-group">
+            <label for="negativeImpact">
+                इस समस्या का समाधान न होने पर आपके जीवन/व्यवसाय पर सबसे अधिक नकारात्मक प्रभाव (Negative Impact) क्या पड़ेगा?
+                <span class="required">*</span>
+            </label>
+            <textarea id="negativeImpact" name="negativeImpact" required placeholder="Describe the negative impact if this problem remains unsolved..."></textarea>
+            <div class="error-message" id="negativeImpactError">Please describe the negative impact</div>
+        </div>
+
+        <button type="submit" class="submit-btn">Submit Qualification →</button>
+    </form>
+</div>
+
+<!-- Success Modal -->
+<div class="success-modal" id="successModal">
+    <div class="success-content">
+        <h2>✓ Excellent! (उत्कृष्ट!)</h2>
+        <p>You are fully qualified. Click below to schedule your strategy session.<br>(आप पूरी तरह से योग्य हैं। अपनी रणनीति सत्र शेड्यूल करने के लिए नीचे क्लिक करें।)</p>
+        <a href="form-d.html" class="success-btn">Schedule Strategy Call →</a>
+    </div>
+</div>
+
+<!-- Disqualification Modal -->
+<div class="success-modal" id="disqualifyModal">
+    <div class="success-content">
+        <h2>⚠️ Thank You</h2>
+        <p id="disqualifyMessage"></p>
+        <a href="#" class="success-btn" onclick="window.location.reload()">Go Back</a>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('qualificationForm');
+    const successModal = document.getElementById('successModal');
+    const disqualifyModal = document.getElementById('disqualifyModal');
+    const disqualifyMessage = document.getElementById('disqualifyMessage');
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Clear previous errors
+        document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
+        
+        // Validate form
+        let isValid = true;
+        
+        const timeCommitment = document.getElementById('timeCommitment').value;
+        if (!timeCommitment) {
+            document.getElementById('timeCommitmentError').style.display = 'block';
+            isValid = false;
+        }
+        
+        const decisionMaker = document.getElementById('decisionMaker').value;
+        if (!decisionMaker) {
+            document.getElementById('decisionMakerError').style.display = 'block';
+            isValid = false;
+        }
+        
+        const budget = document.getElementById('budget').value;
+        if (!budget) {
+            document.getElementById('budgetError').style.display = 'block';
+            isValid = false;
+        }
+        
+        const negativeImpact = document.getElementById('negativeImpact').value.trim();
+        if (!negativeImpact || negativeImpact.length < 20) {
+            document.getElementById('negativeImpactError').style.display = 'block';
+            isValid = false;
+        }
+        
+        if (!isValid) return;
+        
+        // Collect form data
+        const formData = {
+            timeCommitment: timeCommitment,
+            decisionMaker: decisionMaker,
+            budget: budget,
+            negativeImpact: negativeImpact,
+            timestamp: new Date().toISOString()
+        };
+        
+        // CONDITIONAL LOGIC: Qualification scoring
+        const qualificationResult = assessQualification(formData);
+        
+        if (!qualificationResult.qualified) {
+            // DISQUALIFIED - Route to nurture or alternative path
+            console.log('❌ DISQUALIFIED:', qualificationResult.reason);
+            localStorage.setItem('qualificationStatus', 'disqualified');
+            localStorage.setItem('disqualifyReason', qualificationResult.reason);
+            
+            disqualifyMessage.textContent = qualificationResult.message;
+            disqualifyModal.style.display = 'flex';
+            
+            // Send to nurture sequence
+            // sendToNurtureSequence(formData, qualificationResult.reason);
+            return;
+        }
+        
+        // QUALIFIED - Continue to booking
+        console.log('✅ QUALIFIED:', qualificationResult.score + '/10');
+        localStorage.setItem('qualificationStatus', 'qualified');
+        localStorage.setItem('qualificationScore', qualificationResult.score);
+        localStorage.setItem('formC_data', JSON.stringify(formData));
+        
+        // Merge all previous data
+        const formAData = JSON.parse(localStorage.getItem('formA_data') || '{}');
+        const formBData = JSON.parse(localStorage.getItem('formB_data') || '{}');
+        const combinedData = { ...formAData, ...formBData, ...formData, qualificationScore: qualificationResult.score };
+        
+        // Send to backend/CRM with qualification score
+        console.log('Combined Data (A+B+C):', combinedData);
+        
+        // Show success modal
+        successModal.style.display = 'flex';
+    });
+
+    function assessQualification(data) {
+        let score = 0;
+        let disqualifyReason = '';
+        let disqualifyMessage = '';
+        
+        // 1. Time Commitment (Critical)
+        if (data.timeCommitment === 'no') {
+            return {
+                qualified: false,
+                reason: 'no_time_commitment',
+                message: 'We understand you\'re not ready to commit time right now. We\'ll send you resources via email to help when you\'re ready. (हम समझते हैं कि आप अभी समय देने के लिए तैयार नहीं हैं। जब आप तैयार हों तो हम आपको ईमेल के माध्यम से संसाधन भेजेंगे।)',
+                score: 0
+            };
+        }
+        score += 3;
+        
+        // 2. Decision Maker (Important)
+        if (data.decisionMaker === 'myself') {
+            score += 4; // Best case - they can decide immediately
+        } else if (data.decisionMaker === 'partner') {
+            score += 2; // Need to involve partner
+        } else if (data.decisionMaker === 'boss') {
+            score += 1; // Corporate approval needed
+        } else {
+            score += 1; // Other - unclear
+        }
+        
+        // 3. Budget (Critical)
+        if (data.budget === 'not-sure') {
+            // Not automatically disqualified, but lower score
+            score += 1;
+        } else if (data.budget === '10k-25k') {
+            score += 2;
+        } else if (data.budget === '25k-50k') {
+            score += 3;
+        } else if (data.budget === '50k+') {
+            score += 4;
+        }
+        
+        // Minimum qualification threshold
+        if (score < 5) {
+            return {
+                qualified: false,
+                reason: 'low_qualification_score',
+                message: 'Thank you for your interest. Based on your responses, we recommend exploring our self-paced resources first. We\'ll be in touch! (आपकी रुचि के लिए धन्यवाद। आपके उत्तरों के आधार पर, हम पहले हमारे स्व-गति संसाधनों का पता लगाने की सलाह देते हैं।)',
+                score: score
+            };
+        }
+        
+        return {
+            qualified: true,
+            score: score,
+            reason: 'qualified'
+        };
+    }
+</script>
+```
+
+</body>\
+</html>

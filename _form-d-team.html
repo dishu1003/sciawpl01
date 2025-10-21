@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Final Step: Complete Your Application</title>
+  <style>
+    :root{
+      --bg:#0c0f1a; --card:#0f1424; --muted:#b9c2d0; --brand:#6c7bff; --brand2:#9b5cff; --accent:#23d5ab;
+      --white:#fff; --shadow:0 40px 90px rgba(0,0,0,.35); --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 20% -10%, #1a2150 0%, transparent 60%), linear-gradient(180deg, #0b0f1c 0%, #06070d 100%);
+      color:var(--white);
+    }
+    a{color:inherit; text-decoration:none}
+    .container{max-width:1200px; margin:0 auto; padding:0 20px}
+    .badge{
+      display:inline-flex; gap:8px; align-items:center; padding:8px 14px; border:1px solid #2a3357; color:#c7cff3;
+      border-radius:999px; font-weight:600; background:#0d1330aa; backdrop-filter: blur(6px);
+    }
+    .btn{
+      display:inline-flex; align-items:center; gap:10px; padding:14px 22px; border-radius:12px; font-weight:800; letter-spacing:.2px; cursor:pointer;
+      border:0; background:linear-gradient(135deg, var(--brand) 0%, var(--brand2) 100%); color:#fff; box-shadow:0 10px 30px rgba(108,123,255,.35);
+      transition:transform .15s ease, box-shadow .2s ease;
+    }
+    .btn:hover{transform:translateY(-2px); box-shadow:0 14px 40px rgba(108,123,255,.45)}
+    .btn.secondary{background:#121a35; border:1px solid #24305a; box-shadow:none}
+    .progress-bar{
+      display:flex; gap:10px; margin:20px 0; justify-content:center;
+    }
+    .step{
+      width:40px; height:40px; border-radius:50%; background:#1a2350; border:2px solid #2a3357;
+      display:flex; align-items:center; justify-content:center; font-weight:700; color:#9fb0e8;
+    }
+    .step.active{background:var(--brand); border-color:var(--brand); color:#fff;}
+    .step.completed{background:var(--accent); border-color:var(--accent); color:#fff;}
+    .form-wrap{background:linear-gradient(180deg, #0e1433, #0b0f22); border:1px solid #1b2552; border-radius:16px; padding:20px; margin:20px auto; max-width:600px}
+    .form-wrap h3{margin:0 0 6px}
+    .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    .grid-1{grid-template-columns:1fr}
+    label{font-size:13px; font-weight:700; color:#d7defc; margin:8px 0 6px; display:block}
+    input, select, textarea{
+      width:100%; padding:12px 14px; background:#0a1028; color:#e9edff; border:1.5px solid #263166; border-radius:10px; font-size:14px; outline:none;
+      transition:border-color .2s ease, box-shadow .2s ease;
+    }
+    input:focus, select:focus, textarea:focus{border-color:#6c7bff; box-shadow:0 0 0 3px rgba(108,123,255,.15)}
+    textarea{min-height:100px}
+    .hint{font-size:12px; color:#9fb0e8; margin-top:4px}
+    .error{display:none; color:#ff7b7b; font-size:12px; margin-top:4px}
+    .header{padding:20px 0; text-align:center}
+    .header h1{font-size:32px; margin:10px 0; font-weight:800}
+    .header p{color:var(--muted); font-size:16px}
+    .success-card{
+      background:linear-gradient(135deg, rgba(35,213,171,.1), rgba(108,123,255,.1));
+      border:1px solid #23306b; border-radius:12px; padding:15px; margin:15px 0;
+    }
+    .success-card h4{margin:0 0 8px; color:var(--accent); font-size:16px}
+    .success-card p{margin:0; color:#a7b6ea; font-size:14px}
+    .checkbox-group{
+      display:flex; align-items:flex-start; gap:10px; margin:10px 0;
+    }
+    .checkbox-group input[type="checkbox"]{width:auto; margin:0}
+    .checkbox-group label{margin:0; font-size:14px; line-height:1.4}
+    @media(max-width:980px){ .grid{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="container">
+      <div class="progress-bar">
+        <div class="step completed">1</div>
+        <div class="step completed">2</div>
+        <div class="step completed">3</div>
+        <div class="step active">4</div>
+      </div>
+      <h1>Final Step: Complete Your Application</h1>
+      <p>Almost there! Just a few final details to complete your application</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="form-wrap">
+      <h3>Final Application Details</h3>
+      <p style="color:#a7b6ea; margin:0 0 10px;">Complete your application and get ready for your transformation</p>
+      
+      <div class="success-card">
+        <h4>🎉 Congratulations!</h4>
+        <p>You've completed 3 steps of our application process. This final step ensures we have everything we need to create your personalized success plan.</p>
+      </div>
+      
+      <form id="formD">
+        <div class="grid">
+          <div>
+            <label>Current Business Status *</label>
+            <select id="businessStatus" required>
+              <option value="">Select your status</option>
+              <option value="starting">Just starting out</option>
+              <option value="growing">Growing business</option>
+              <option value="established">Established business</option>
+              <option value="struggling">Struggling business</option>
+            </select>
+            <div class="error" id="errBusiness">Please select your business status</div>
+          </div>
+          <div>
+            <label>Team Size *</label>
+            <select id="teamSize" required>
+              <option value="">Select team size</option>
+              <option value="solo">Just me (Solo)</option>
+              <option value="small">2-5 people</option>
+              <option value="medium">6-20 people</option>
+              <option value="large">20+ people</option>
+            </select>
+            <div class="error" id="errTeam">Please select your team size</div>
+          </div>
+          <div>
+            <label>Preferred Contact Method *</label>
+            <select id="contactMethod" required>
+              <option value="">How should we contact you?</option>
+              <option value="whatsapp">WhatsApp</option>
+              <option value="call">Phone Call</option>
+              <option value="email">Email</option>
+              <option value="any">Any method</option>
+            </select>
+            <div class="error" id="errContact">Please select contact method</div>
+          </div>
+          <div>
+            <label>Best Time to Contact *</label>
+            <select id="contactTime" required>
+              <option value="">Select best time</option>
+              <option value="morning">Morning (9 AM - 12 PM)</option>
+              <option value="afternoon">Afternoon (12 PM - 5 PM)</option>
+              <option value="evening">Evening (5 PM - 8 PM)</option>
+              <option value="flexible">I'm flexible</option>
+            </select>
+            <div class="error" id="errTime">Please select best contact time</div>
+          </div>
+        </div>
+
+        <div class="grid-1">
+          <label>Additional Information</label>
+          <textarea id="additionalInfo" placeholder="Anything else you'd like us to know about your goals, challenges, or expectations..."></textarea>
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="termsAgreement" required>
+          <label for="termsAgreement">I agree to the terms and conditions and understand that this is a premium program with specific requirements and commitments. *</label>
+        </div>
+        <div class="error" id="errTerms">Please agree to the terms and conditions</div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="marketingConsent">
+          <label for="marketingConsent">I consent to receive marketing communications and updates about the program.</label>
+        </div>
+
+        <div class="hint">Your application will be reviewed within 24 hours. We'll contact you to discuss next steps.</div>
+
+        <div style="display:flex; gap:10px; margin-top:20px">
+          <button type="submit" class="btn" style="flex:1; justify-content:center">Complete Application 🚀</button>
+          <a href="_form-c-team.html" class="btn secondary" style="flex:1; justify-content:center">← Back to Step 3</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Form validation and submission
+    document.getElementById('formD').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const businessStatus = document.getElementById('businessStatus').value;
+      const teamSize = document.getElementById('teamSize').value;
+      const contactMethod = document.getElementById('contactMethod').value;
+      const contactTime = document.getElementById('contactTime').value;
+      const additionalInfo = document.getElementById('additionalInfo').value.trim();
+      const termsAgreement = document.getElementById('termsAgreement').checked;
+      const marketingConsent = document.getElementById('marketingConsent').checked;
+
+      let ok = true;
+      const show = id => { 
+        const el = document.getElementById(id); 
+        el.style.display='block'; 
+        setTimeout(()=>el.style.display='none', 3000); 
+      }
+
+      if(!businessStatus){ show('errBusiness'); ok=false; }
+      if(!teamSize){ show('errTeam'); ok=false; }
+      if(!contactMethod){ show('errContact'); ok=false; }
+      if(!contactTime){ show('errTime'); ok=false; }
+      if(!termsAgreement){ show('errTerms'); ok=false; }
+
+      if(!ok) return;
+
+      // Save Form D data
+      const formD = {
+        businessStatus,
+        teamSize,
+        contactMethod,
+        contactTime,
+        additionalInfo,
+        termsAgreement,
+        marketingConsent,
+        timestamp: new Date().toISOString()
+      };
+      localStorage.setItem('formD', JSON.stringify(formD));
+
+      // Combine all form data
+      const formAData = JSON.parse(localStorage.getItem('formA') || '{}');
+      const formBData = JSON.parse(localStorage.getItem('formB') || '{}');
+      const formCData = JSON.parse(localStorage.getItem('formC') || '{}');
+      const allFormData = {
+        ...formAData,
+        ...formBData,
+        ...formCData,
+        ...formD
+      };
+      localStorage.setItem('completeApplicationData', JSON.stringify(allFormData));
+
+      // Show success message and redirect
+      alert('🎉 Application Submitted Successfully!\n\nWe\'ll review your application and contact you within 24 hours.\n\nThank you for your interest in SpartanCommunityIndia!');
+      
+      // Redirect to thank you page
+      window.location.href = 'thank-you.php';
+    });
+
+    // Auto-fill if data exists
+    const savedFormD = JSON.parse(localStorage.getItem('formD') || '{}');
+    if(savedFormD.businessStatus) document.getElementById('businessStatus').value = savedFormD.businessStatus;
+    if(savedFormD.teamSize) document.getElementById('teamSize').value = savedFormD.teamSize;
+    if(savedFormD.contactMethod) document.getElementById('contactMethod').value = savedFormD.contactMethod;
+    if(savedFormD.contactTime) document.getElementById('contactTime').value = savedFormD.contactTime;
+    if(savedFormD.additionalInfo) document.getElementById('additionalInfo').value = savedFormD.additionalInfo;
+    if(savedFormD.termsAgreement) document.getElementById('termsAgreement').checked = savedFormD.termsAgreement;
+    if(savedFormD.marketingConsent) document.getElementById('marketingConsent').checked = savedFormD.marketingConsent;
+  </script>
+</body>
+</html>

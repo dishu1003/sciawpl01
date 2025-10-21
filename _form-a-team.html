@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form A - Lead Capture & Intent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .form-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .form-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .form-header p {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .required {
+            color: #e74c3c;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 25%;
+            transition: width 0.3s ease;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .team-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 13px;
+            margin-top: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="step-indicator">Step 1 of 4</div>
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+        
+        <div class="form-header">
+            <h1>Let's Get Started! 🚀</h1>
+            <p>Tell us about yourself and your biggest challenge</p>
+            <div id="teamBadge" class="team-badge" style="display: none;"></div>
+        </div>
+        
+        <form id="leadForm">
+            <div class="form-group">
+                <label for="fullName">
+                    Full Name / पूरा नाम <span class="required">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="fullName" 
+                    name="fullName" 
+                    placeholder="Enter your full name"
+                    required
+                />
+                <div class="error-message" id="nameError">Please enter your name</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">
+                    Email Address / ईमेल पता <span class="required">*</span>
+                </label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    placeholder="your.email@example.com"
+                    required
+                />
+                <div class="error-message" id="emailError">Please enter a valid email</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">
+                    Phone Number / फ़ोन नंबर <span class="required">*</span>
+                </label>
+                <input 
+                    type="tel" 
+                    id="phone" 
+                    name="phone" 
+                    placeholder="+91 98765 43210"
+                    required
+                />
+                <div class="error-message" id="phoneError">Please enter your phone number</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="challenge">
+                    What is your biggest challenge right now? / अभी आपकी सबसे बड़ी चुनौती क्या है? <span class="required">*</span>
+                </label>
+                <textarea 
+                    id="challenge" 
+                    name="challenge" 
+                    placeholder="Describe your main challenge in detail..."
+                    required
+                ></textarea>
+                <div class="error-message" id="challengeError">Please describe your challenge</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="urgency">
+                    Can this wait? / क्या यह इंतज़ार कर सकता है? <span class="required">*</span>
+                </label>
+                <select id="urgency" name="urgency" required>
+                    <option value="">Select an option / विकल्प चुनें</option>
+                    <option value="no">No, I need a solution now. / नहीं, मुझे अभी समाधान चाहिए।</option>
+                    <option value="yes">Yes, maybe later. / हाँ, शायद बाद में।</option>
+                </select>
+                <div class="error-message" id="urgencyError">Please select an option</div>
+            </div>
+            
+            <button type="submit" class="submit-btn">
+                Continue to Next Step →
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // Capture team member from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const teamMember = urlParams.get('tm') || 'Direct';
+        
+        // Display team member badge if present
+        if (teamMember !== 'Direct') {
+            const badge = document.getElementById('teamBadge');
+            badge.textContent = `Referred by: ${teamMember}`;
+            badge.style.display = 'inline-block';
+        }
+        
+        // Store team member in localStorage for later forms
+        localStorage.setItem('teamMember', teamMember);
+        
+        // Form validation and submission
+        document.getElementById('leadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form values
+            const fullName = document.getElementById('fullName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const challenge = document.getElementById('challenge').value.trim();
+            const urgency = document.getElementById('urgency').value;
+            
+            // Basic validation
+            let isValid = true;
+            
+            if (!fullName) {
+                showError('nameError');
+                isValid = false;
+            }
+            
+            if (!email || !isValidEmail(email)) {
+                showError('emailError');
+                isValid = false;
+            }
+            
+            if (!phone) {
+                showError('phoneError');
+                isValid = false;
+            }
+            
+            if (!challenge) {
+                showError('challengeError');
+                isValid = false;
+            }
+            
+            if (!urgency) {
+                showError('urgencyError');
+                isValid = false;
+            }
+            
+            if (!isValid) return;
+            
+            // Store data in localStorage
+            const formData = {
+                fullName: fullName,
+                email: email,
+                phone: phone,
+                challenge: challenge,
+                urgency: urgency,
+                teamMember: teamMember,
+                timestamp: new Date().toISOString()
+            };
+            
+            localStorage.setItem('formA', JSON.stringify(formData));
+            
+            // Conditional routing based on urgency
+            if (urgency === 'no') {
+                // Hot lead - continue to Form B
+                window.location.href = 'form-b-team.html';
+            } else {
+                // Nurture lead - redirect to nurture sequence
+                // For now, still going to Form B, but you can create a separate nurture page
+                localStorage.setItem('leadStatus', 'nurture');
+                window.location.href = 'form-b-team.html';
+                // Uncomment below to redirect to nurture page:
+                // window.location.href = 'nurture-sequence.html';
+            }
+        });
+        
+        function showError(errorId) {
+            document.getElementById(errorId).style.display = 'block';
+            setTimeout(() => {
+                document.getElementById(errorId).style.display = 'none';
+            }, 3000);
+        }
+        
+        function isValidEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+        
+        // Hide error messages on input
+        document.querySelectorAll('input, textarea, select').forEach(element => {
+            element.addEventListener('input', function() {
+                const errorId = this.id + 'Error';
+                if (document.getElementById(errorId)) {
+                    document.getElementById(errorId).style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Step 2: Your Goals & Timeline</title>
+  <style>
+    :root{
+      --bg:#0c0f1a; --card:#0f1424; --muted:#b9c2d0; --brand:#6c7bff; --brand2:#9b5cff; --accent:#23d5ab;
+      --white:#fff; --shadow:0 40px 90px rgba(0,0,0,.35); --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 20% -10%, #1a2150 0%, transparent 60%), linear-gradient(180deg, #0b0f1c 0%, #06070d 100%);
+      color:var(--white);
+    }
+    a{color:inherit; text-decoration:none}
+    .container{max-width:1200px; margin:0 auto; padding:0 20px}
+    .badge{
+      display:inline-flex; gap:8px; align-items:center; padding:8px 14px; border:1px solid #2a3357; color:#c7cff3;
+      border-radius:999px; font-weight:600; background:#0d1330aa; backdrop-filter: blur(6px);
+    }
+    .btn{
+      display:inline-flex; align-items:center; gap:10px; padding:14px 22px; border-radius:12px; font-weight:800; letter-spacing:.2px; cursor:pointer;
+      border:0; background:linear-gradient(135deg, var(--brand) 0%, var(--brand2) 100%); color:#fff; box-shadow:0 10px 30px rgba(108,123,255,.35);
+      transition:transform .15s ease, box-shadow .2s ease;
+    }
+    .btn:hover{transform:translateY(-2px); box-shadow:0 14px 40px rgba(108,123,255,.45)}
+    .btn.secondary{background:#121a35; border:1px solid #24305a; box-shadow:none}
+    .progress-bar{
+      display:flex; gap:10px; margin:20px 0; justify-content:center;
+    }
+    .step{
+      width:40px; height:40px; border-radius:50%; background:#1a2350; border:2px solid #2a3357;
+      display:flex; align-items:center; justify-content:center; font-weight:700; color:#9fb0e8;
+    }
+    .step.active{background:var(--brand); border-color:var(--brand); color:#fff;}
+    .step.completed{background:var(--accent); border-color:var(--accent); color:#fff;}
+    .form-wrap{background:linear-gradient(180deg, #0e1433, #0b0f22); border:1px solid #1b2552; border-radius:16px; padding:20px; margin:20px auto; max-width:600px}
+    .form-wrap h3{margin:0 0 6px}
+    .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    .grid-1{grid-template-columns:1fr}
+    label{font-size:13px; font-weight:700; color:#d7defc; margin:8px 0 6px; display:block}
+    input, select, textarea{
+      width:100%; padding:12px 14px; background:#0a1028; color:#e9edff; border:1.5px solid #263166; border-radius:10px; font-size:14px; outline:none;
+      transition:border-color .2s ease, box-shadow .2s ease;
+    }
+    input:focus, select:focus, textarea:focus{border-color:#6c7bff; box-shadow:0 0 0 3px rgba(108,123,255,.15)}
+    textarea{min-height:100px}
+    .hint{font-size:12px; color:#9fb0e8; margin-top:4px}
+    .error{display:none; color:#ff7b7b; font-size:12px; margin-top:4px}
+    .header{padding:20px 0; text-align:center}
+    .header h1{font-size:32px; margin:10px 0; font-weight:800}
+    .header p{color:var(--muted); font-size:16px}
+    @media(max-width:980px){ .grid{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="container">
+      <div class="progress-bar">
+        <div class="step completed">1</div>
+        <div class="step active">2</div>
+        <div class="step">3</div>
+        <div class="step">4</div>
+      </div>
+      <h1>Step 2: Your Goals & Timeline</h1>
+      <p>Help us understand your business goals and timeline</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="form-wrap">
+      <h3>Tell Us About Your Goals</h3>
+      <p style="color:#a7b6ea; margin:0 0 10px;">This helps us personalize your experience</p>
+      
+      <form id="formB">
+        <div class="grid">
+          <div>
+            <label>Monthly Revenue Goal *</label>
+            <select id="revenueGoal" required>
+              <option value="">Select your goal</option>
+              <option value="1-5lakh">₹1-5 Lakh</option>
+              <option value="5-10lakh">₹5-10 Lakh</option>
+              <option value="10-25lakh">₹10-25 Lakh</option>
+              <option value="25lakh+">₹25+ Lakh</option>
+            </select>
+            <div class="error" id="errRevenue">Please select your revenue goal</div>
+          </div>
+          <div>
+            <label>Timeline to Achieve *</label>
+            <select id="timeline" required>
+              <option value="">Select timeline</option>
+              <option value="3months">Within 3 months</option>
+              <option value="6months">Within 6 months</option>
+              <option value="1year">Within 1 year</option>
+              <option value="2years">Within 2 years</option>
+            </select>
+            <div class="error" id="errTimeline">Please select timeline</div>
+          </div>
+          <div>
+            <label>Training Interest *</label>
+            <select id="trainingInterest" required>
+              <option value="">Select interest</option>
+              <option value="digital_marketing">Digital Marketing</option>
+              <option value="sales_closing">Sales & Closing</option>
+              <option value="business_scaling">Business Scaling</option>
+              <option value="lead_generation">Lead Generation</option>
+              <option value="all">All of the above</option>
+            </select>
+            <div class="error" id="errTraining">Please select your interest</div>
+          </div>
+          <div>
+            <label>Previous Training Experience *</label>
+            <select id="previousTraining" required>
+              <option value="">Select experience</option>
+              <option value="none">No previous training</option>
+              <option value="some">Some basic training</option>
+              <option value="extensive">Extensive training</option>
+            </select>
+            <div class="error" id="errPrevious">Please select your experience</div>
+          </div>
+        </div>
+
+        <div class="grid-1">
+          <label>What's your biggest challenge right now? *</label>
+          <textarea id="biggestChallenge" placeholder="Be specific about where you're stuck..." required></textarea>
+          <div class="error" id="errChallenge">Please tell us your main challenge</div>
+        </div>
+
+        <div class="hint">Your information helps us create the perfect plan for you.</div>
+
+        <div style="display:flex; gap:10px; margin-top:20px">
+          <button type="submit" class="btn" style="flex:1; justify-content:center">Continue to Step 3 →</button>
+          <a href="index.html" class="btn secondary" style="flex:1; justify-content:center">← Back to Home</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Load Form A data
+    const formAData = JSON.parse(localStorage.getItem('formA') || '{}');
+    console.log('Form A Data:', formAData);
+
+    // Form validation and submission
+    document.getElementById('formB').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const revenueGoal = document.getElementById('revenueGoal').value;
+      const timeline = document.getElementById('timeline').value;
+      const trainingInterest = document.getElementById('trainingInterest').value;
+      const previousTraining = document.getElementById('previousTraining').value;
+      const biggestChallenge = document.getElementById('biggestChallenge').value.trim();
+
+      let ok = true;
+      const show = id => { 
+        const el = document.getElementById(id); 
+        el.style.display='block'; 
+        setTimeout(()=>el.style.display='none', 3000); 
+      }
+
+      if(!revenueGoal){ show('errRevenue'); ok=false; }
+      if(!timeline){ show('errTimeline'); ok=false; }
+      if(!trainingInterest){ show('errTraining'); ok=false; }
+      if(!previousTraining){ show('errPrevious'); ok=false; }
+      if(!biggestChallenge){ show('errChallenge'); ok=false; }
+
+      if(!ok) return;
+
+      // Save Form B data
+      const formB = {
+        revenueGoal,
+        timeline,
+        trainingInterest,
+        previousTraining,
+        biggestChallenge,
+        timestamp: new Date().toISOString()
+      };
+      localStorage.setItem('formB', JSON.stringify(formB));
+
+      // Combine with Form A data
+      const combinedData = {
+        ...formAData,
+        ...formB
+      };
+      localStorage.setItem('combinedFormData', JSON.stringify(combinedData));
+
+      // Redirect to Form C
+      window.location.href = 'form-c.php';
+    });
+
+    // Auto-fill if data exists
+    const savedFormB = JSON.parse(localStorage.getItem('formB') || '{}');
+    if(savedFormB.revenueGoal) document.getElementById('revenueGoal').value = savedFormB.revenueGoal;
+    if(savedFormB.timeline) document.getElementById('timeline').value = savedFormB.timeline;
+    if(savedFormB.trainingInterest) document.getElementById('trainingInterest').value = savedFormB.trainingInterest;
+    if(savedFormB.previousTraining) document.getElementById('previousTraining').value = savedFormB.previousTraining;
+    if(savedFormB.biggestChallenge) document.getElementById('biggestChallenge').value = savedFormB.biggestChallenge;
+  </script>
+</body>
+</html>

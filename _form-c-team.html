@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Step 3: Investment & Commitment</title>
+  <style>
+    :root{
+      --bg:#0c0f1a; --card:#0f1424; --muted:#b9c2d0; --brand:#6c7bff; --brand2:#9b5cff; --accent:#23d5ab;
+      --white:#fff; --shadow:0 40px 90px rgba(0,0,0,.35); --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 20% -10%, #1a2150 0%, transparent 60%), linear-gradient(180deg, #0b0f1c 0%, #06070d 100%);
+      color:var(--white);
+    }
+    a{color:inherit; text-decoration:none}
+    .container{max-width:1200px; margin:0 auto; padding:0 20px}
+    .badge{
+      display:inline-flex; gap:8px; align-items:center; padding:8px 14px; border:1px solid #2a3357; color:#c7cff3;
+      border-radius:999px; font-weight:600; background:#0d1330aa; backdrop-filter: blur(6px);
+    }
+    .btn{
+      display:inline-flex; align-items:center; gap:10px; padding:14px 22px; border-radius:12px; font-weight:800; letter-spacing:.2px; cursor:pointer;
+      border:0; background:linear-gradient(135deg, var(--brand) 0%, var(--brand2) 100%); color:#fff; box-shadow:0 10px 30px rgba(108,123,255,.35);
+      transition:transform .15s ease, box-shadow .2s ease;
+    }
+    .btn:hover{transform:translateY(-2px); box-shadow:0 14px 40px rgba(108,123,255,.45)}
+    .btn.secondary{background:#121a35; border:1px solid #24305a; box-shadow:none}
+    .progress-bar{
+      display:flex; gap:10px; margin:20px 0; justify-content:center;
+    }
+    .step{
+      width:40px; height:40px; border-radius:50%; background:#1a2350; border:2px solid #2a3357;
+      display:flex; align-items:center; justify-content:center; font-weight:700; color:#9fb0e8;
+    }
+    .step.active{background:var(--brand); border-color:var(--brand); color:#fff;}
+    .step.completed{background:var(--accent); border-color:var(--accent); color:#fff;}
+    .form-wrap{background:linear-gradient(180deg, #0e1433, #0b0f22); border:1px solid #1b2552; border-radius:16px; padding:20px; margin:20px auto; max-width:600px}
+    .form-wrap h3{margin:0 0 6px}
+    .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    .grid-1{grid-template-columns:1fr}
+    label{font-size:13px; font-weight:700; color:#d7defc; margin:8px 0 6px; display:block}
+    input, select, textarea{
+      width:100%; padding:12px 14px; background:#0a1028; color:#e9edff; border:1.5px solid #263166; border-radius:10px; font-size:14px; outline:none;
+      transition:border-color .2s ease, box-shadow .2s ease;
+    }
+    input:focus, select:focus, textarea:focus{border-color:#6c7bff; box-shadow:0 0 0 3px rgba(108,123,255,.15)}
+    textarea{min-height:100px}
+    .hint{font-size:12px; color:#9fb0e8; margin-top:4px}
+    .error{display:none; color:#ff7b7b; font-size:12px; margin-top:4px}
+    .header{padding:20px 0; text-align:center}
+    .header h1{font-size:32px; margin:10px 0; font-weight:800}
+    .header p{color:var(--muted); font-size:16px}
+    .investment-card{
+      background:linear-gradient(135deg, rgba(35,213,171,.1), rgba(108,123,255,.1));
+      border:1px solid #23306b; border-radius:12px; padding:15px; margin:15px 0;
+    }
+    .investment-card h4{margin:0 0 8px; color:var(--accent); font-size:16px}
+    .investment-card p{margin:0; color:#a7b6ea; font-size:14px}
+    @media(max-width:980px){ .grid{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="container">
+      <div class="progress-bar">
+        <div class="step completed">1</div>
+        <div class="step completed">2</div>
+        <div class="step active">3</div>
+        <div class="step">4</div>
+      </div>
+      <h1>Step 3: Investment & Commitment</h1>
+      <p>Let's discuss your investment readiness and commitment level</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="form-wrap">
+      <h3>Investment & Commitment Details</h3>
+      <p style="color:#a7b6ea; margin:0 0 10px;">This helps us understand your readiness level</p>
+      
+      <div class="investment-card">
+        <h4>💎 Premium Investment Range</h4>
+        <p>Our premium program investment ranges from ₹25,000 - ₹75,000 depending on your goals and timeline. This includes personalized coaching, exclusive access, and lifetime support.</p>
+      </div>
+      
+      <form id="formC">
+        <div class="grid">
+          <div>
+            <label>Investment Readiness *</label>
+            <select id="investmentReadiness" required>
+              <option value="">Select your readiness</option>
+              <option value="ready_now">Ready to invest now</option>
+              <option value="ready_soon">Ready within 30 days</option>
+              <option value="considering">Still considering</option>
+              <option value="need_info">Need more information</option>
+            </select>
+            <div class="error" id="errInvestment">Please select your readiness level</div>
+          </div>
+          <div>
+            <label>Budget Range *</label>
+            <select id="budgetRange" required>
+              <option value="">Select your budget</option>
+              <option value="under_25k">Under ₹25,000</option>
+              <option value="25k_50k">₹25,000 - ₹50,000</option>
+              <option value="50k_75k">₹50,000 - ₹75,000</option>
+              <option value="above_75k">Above ₹75,000</option>
+            </select>
+            <div class="error" id="errBudget">Please select your budget range</div>
+          </div>
+          <div>
+            <label>Time Commitment *</label>
+            <select id="timeCommitment" required>
+              <option value="">Select commitment level</option>
+              <option value="high">High (2-3 hours daily)</option>
+              <option value="medium">Medium (1-2 hours daily)</option>
+              <option value="low">Low (30-60 minutes daily)</option>
+            </select>
+            <div class="error" id="errTime">Please select your time commitment</div>
+          </div>
+          <div>
+            <label>Decision Maker *</label>
+            <select id="decisionMaker" required>
+              <option value="">Who makes decisions?</option>
+              <option value="myself">I make my own decisions</option>
+              <option value="partner">I need to discuss with partner</option>
+              <option value="family">I need family approval</option>
+              <option value="other">Other</option>
+            </select>
+            <div class="error" id="errDecision">Please select who makes decisions</div>
+          </div>
+        </div>
+
+        <div class="grid-1">
+          <label>What would hold you back from joining? *</label>
+          <textarea id="objections" placeholder="Be honest about any concerns or obstacles..." required></textarea>
+          <div class="error" id="errObjections">Please tell us what might hold you back</div>
+        </div>
+
+        <div class="grid-1">
+          <label>Why are you ready to take action now? *</label>
+          <textarea id="motivation" placeholder="What's driving you to make this change..." required></textarea>
+          <div class="error" id="errMotivation">Please tell us your motivation</div>
+        </div>
+
+        <div class="hint">Your honest answers help us provide the best support for your success.</div>
+
+        <div style="display:flex; gap:10px; margin-top:20px">
+          <button type="submit" class="btn" style="flex:1; justify-content:center">Continue to Final Step →</button>
+          <a href="_form-b-team.html" class="btn secondary" style="flex:1; justify-content:center">← Back to Step 2</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Form validation and submission
+    document.getElementById('formC').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const investmentReadiness = document.getElementById('investmentReadiness').value;
+      const budgetRange = document.getElementById('budgetRange').value;
+      const timeCommitment = document.getElementById('timeCommitment').value;
+      const decisionMaker = document.getElementById('decisionMaker').value;
+      const objections = document.getElementById('objections').value.trim();
+      const motivation = document.getElementById('motivation').value.trim();
+
+      let ok = true;
+      const show = id => { 
+        const el = document.getElementById(id); 
+        el.style.display='block'; 
+        setTimeout(()=>el.style.display='none', 3000); 
+      }
+
+      if(!investmentReadiness){ show('errInvestment'); ok=false; }
+      if(!budgetRange){ show('errBudget'); ok=false; }
+      if(!timeCommitment){ show('errTime'); ok=false; }
+      if(!decisionMaker){ show('errDecision'); ok=false; }
+      if(!objections){ show('errObjections'); ok=false; }
+      if(!motivation){ show('errMotivation'); ok=false; }
+
+      if(!ok) return;
+
+      // Save Form C data
+      const formC = {
+        investmentReadiness,
+        budgetRange,
+        timeCommitment,
+        decisionMaker,
+        objections,
+        motivation,
+        timestamp: new Date().toISOString()
+      };
+      localStorage.setItem('formC', JSON.stringify(formC));
+
+      // Combine with previous data
+      const formAData = JSON.parse(localStorage.getItem('formA') || '{}');
+      const formBData = JSON.parse(localStorage.getItem('formB') || '{}');
+      const combinedData = {
+        ...formAData,
+        ...formBData,
+        ...formC
+      };
+      localStorage.setItem('combinedFormData', JSON.stringify(combinedData));
+
+      // Redirect to Form D
+      window.location.href = 'form-d.php';
+    });
+
+    // Auto-fill if data exists
+    const savedFormC = JSON.parse(localStorage.getItem('formC') || '{}');
+    if(savedFormC.investmentReadiness) document.getElementById('investmentReadiness').value = savedFormC.investmentReadiness;
+    if(savedFormC.budgetRange) document.getElementById('budgetRange').value = savedFormC.budgetRange;
+    if(savedFormC.timeCommitment) document.getElementById('timeCommitment').value = savedFormC.timeCommitment;
+    if(savedFormC.decisionMaker) document.getElementById('decisionMaker').value = savedFormC.decisionMaker;
+    if(savedFormC.objections) document.getElementById('objections').value = savedFormC.objections;
+    if(savedFormC.motivation) document.getElementById('motivation').value = savedFormC.motivation;
+  </script>
+</body>
+</html>

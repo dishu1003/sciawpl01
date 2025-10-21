@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spartan Community India - Transform Your Life</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0A2540 0%, #1e3a8a 50%, #312e81 100%);
+            color: #e5e7eb;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header */
+        .header {
+            padding: 24px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .brand {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+        }
+        
+        .tagline {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-top: 4px;
+            letter-spacing: 1px;
+        }
+        
+        /* Hero Section */
+        .hero {
+            padding: 60px 0;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 48px;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero p {
+            font-size: 20px;
+            color: #cbd5e1;
+            max-width: 700px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+        }
+        
+        /* Glass Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Two Column Layout */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            margin: 60px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .two-col {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            .hero h1 { font-size: 32px; }
+            .hero p { font-size: 18px; }
+        }
+        
+        /* Benefits */
+        .benefits {
+            list-style: none;
+        }
+        
+        .benefit-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 24px;
+            padding: 16px;
+            background: rgba(212, 175, 55, 0.1);
+            border-left: 3px solid #D4AF37;
+            border-radius: 8px;
+        }
+        
+        .benefit-icon {
+            font-size: 28px;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+        
+        .benefit-text h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #D4AF37;
+        }
+        
+        .benefit-text p {
+            font-size: 15px;
+            color: #cbd5e1;
+            line-height: 1.5;
+        }
+        
+        /* Form */
+        .form-section h2 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+        
+        .form-section p {
+            color: #94a3b8;
+            margin-bottom: 28px;
+            font-size: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #e5e7eb;
+            font-size: 14px;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #D4AF37;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .form-group input::placeholder {
+            color: #64748b;
+        }
+        
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+            color: #0A2540;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(212, 175, 55, 0.6);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Trust Badges */
+        .trust-section {
+            text-align: center;
+            padding: 60px 0;
+        }
+        
+        .trust-badges {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+        
+        .badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            min-width: 140px;
+        }
+        
+        .badge-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+        
+        .badge-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #D4AF37;
+            margin-bottom: 4px;
+        }
+        
+        .badge-text {
+            font-size: 13px;
+            color: #94a3b8;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #64748b;
+            font-size: 14px;
+        }
+        
+        .success-message {
+            display: none;
+            padding: 16px;
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            border-radius: 10px;
+            color: #86efac;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .error-message {
+            display: none;
+            padding: 16px;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            border-radius: 10px;
+            color: #fca5a5;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="brand">Spartan Community India</div>
+            <div class="tagline">Transform Your Life • Build Your Future</div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h1>अपनी ज़िन्दगी को बदलने का समय आ गया है</h1>
+            <p>हज़ारों भारतीयों ने अपनी सेहत और आमदनी दोनों को बेहतर बनाया है। अब आपकी बारी है।</p>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="two-col">
+            <div>
+                <ul class="benefits">
+                    <li class="benefit-item">
+                        <div class="benefit-icon">💪</div>
+                        <div class="benefit-text">
+                            <h3>बेहतर सेहत और फिटनेस</h3>
+                            <p>प्रीमियम वेलनेस प्रोडक्ट्स और एक्सपर्ट गाइडेंस से अपनी हेल्थ को ट्रांसफॉर्म करें</p>
+                        </div>
+                    </li>
+                    <li class="benefit-item">
+                        <div class="benefit-icon">💰</div>
+                        <div class="benefit-text">
+                            <h3>अतिरिक्त आमदनी का ज़रिया</h3>
+                            <p>घर बैठे अपना बिज़नेस शुरू करें और महीने में ₹25,000 से ₹1,00,000+ कमाएं</p>
+                        </div>
+                    </li>
+                    <li class="benefit-item">
+                        <div class="benefit-icon">🎯</div>
+                        <div class="benefit-text">
+                            <h3>प्रोवेन सिस्टम और ट्रेनिंग</h3>
+                            <p>स्टेप-बाय-स्टेप ट्रेनिंग, मेंटरशिप और कम्युनिटी सपोर्ट</p>
+                        </div>
+                    </li>
+                    <li class="benefit-item">
+                        <div class="benefit-icon">🚀</div>
+                        <div class="benefit-text">
+                            <h3>फ्लेक्सिबल टाइमिंग</h3>
+                            <p>अपने टाइम पर काम करें - पार्ट टाइम या फुल टाइम, आपकी मर्ज़ी</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div>
+                <div class="glass-card">
+                    <div class="form-section">
+                        <h2>🎁 फ्री कंसल्टेशन बुक करें</h2>
+                        <p>अपनी डिटेल्स भरें और हमारे एक्सपर्ट से बात करें</p>
+                        
+                        <div id="successMsg" class="success-message"></div>
+                        <div id="errorMsg" class="error-message"></div>
+                        
+                        <form id="leadForm">
+                            <div class="form-group">
+                                <label for="name">आपका नाम *</label>
+                                <input type="text" id="name" name="name" placeholder="अपना पूरा नाम लिखें" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="phone">मोबाइल नंबर *</label>
+                                <input type="tel" id="phone" name="phone" placeholder="10 अंकों का नंबर" pattern="[0-9]{10}" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="email">ईमेल (ऑप्शनल)</label>
+                                <input type="email" id="email" name="email" placeholder="your@email.com">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="city">शहर *</label>
+                                <input type="text" id="city" name="city" placeholder="आप किस शहर से हैं?" required>
+                            </div>
+                            
+                            <input type="hidden" id="team_code" name="team_code" value="">
+                            
+                            <button type="submit" class="btn-primary" id="submitBtn">
+                                अभी शुरू करें →
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="trust-section">
+        <div class="container">
+            <h2 style="font-family: 'Montserrat', sans-serif; font-size: 32px; margin-bottom: 10px;">भारत भर में हज़ारों लोगों का भरोसा</h2>
+            <p style="color: #94a3b8; margin-bottom: 40px;">आंकड़े खुद बोलते हैं</p>
+            
+            <div class="trust-badges">
+                <div class="badge">
+                    <div class="badge-icon">👥</div>
+                    <div class="badge-number">50,000+</div>
+                    <div class="badge-text">सक्रिय मेंबर्स</div>
+                </div>
+                <div class="badge">
+                    <div class="badge-icon">⭐</div>
+                    <div class="badge-number">4.8/5</div>
+                    <div class="badge-text">रेटिंग</div>
+                </div>
+                <div class="badge">
+                    <div class="badge-icon">🏆</div>
+                    <div class="badge-number">100+</div>
+                    <div class="badge-text">शहरों में</div>
+                </div>
+                <div class="badge">
+                    <div class="badge-icon">💎</div>
+                    <div class="badge-number">₹10Cr+</div>
+                    <div class="badge-text">कुल कमाई</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Spartan Community India. All rights reserved.</p>
+            <p style="margin-top: 8px;">Privacy Policy | Terms & Conditions</p>
+        </div>
+    </footer>
+
+    <script>
+        // Extract UTM parameters and team code from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const teamCode = urlParams.get('ref') || urlParams.get('team') || '';
+        if (teamCode) {
+            document.getElementById('team_code').value = teamCode;
+        }
+
+        // Form submission
+        document.getElementById('leadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const successMsg = document.getElementById('successMsg');
+            const errorMsg = document.getElementById('errorMsg');
+            
+            // Hide previous messages
+            successMsg.style.display = 'none';
+            errorMsg.style.display = 'none';
+            
+            // Disable button
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'भेजा जा रहा है...';
+            
+            // Collect form data
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            data.source_page = 'premiumaccess';
+            data.form_step = 'A';
+            data.utm_source = urlParams.get('utm_source') || '';
+            data.utm_medium = urlParams.get('utm_medium') || '';
+            data.utm_campaign = urlParams.get('utm_campaign') || '';
+            
+            try {
+                // IMPORTANT: Update this URL to your actual API endpoint
+                const response = await fetch('/api/save_lead.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    successMsg.textContent = '✓ सफलतापूर्वक सबमिट हो गया! हम जल्द ही आपसे संपर्क करेंगे।';
+                    successMsg.style.display = 'block';
+                    e.target.reset();
+                    
+                    // Redirect to next form (optional)
+                    setTimeout(() => {
+                        window.location.href = '/form-b.html?lead_id=' + result.lead_id;
+                    }, 2000);
+                } else {
+                    throw new Error(result.message || 'कुछ गलत हो गया');
+                }
+            } catch (error) {
+                errorMsg.textContent = '❌ ' + error.message;
+                errorMsg.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'अभी शुरू करें →';
+            }
+        });
+    </script>
+</body>
+</html>

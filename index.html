@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SpartanCommunityIndia — Build Relentless Momentum</title>
+  <meta name="description" content="Join SpartanCommunityIndia to level up your business, mindset, and execution. Consistency, accountability, and elite systems for unstoppable growth." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0c0f1a; --card:#0f1424; --muted:#b9c2d0; --brand:#6c7bff; --brand2:#9b5cff; --accent:#23d5ab;
+      --white:#fff; --shadow:0 40px 90px rgba(0,0,0,.35); --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 20% -10%, #1a2150 0%, transparent 60%), linear-gradient(180deg, #0b0f1c 0%, #06070d 100%);
+      color:var(--white);
+    }
+    a{color:inherit; text-decoration:none}
+    .container{max-width:1200px; margin:0 auto; padding:0 20px}
+    .badge{
+      display:inline-flex; gap:8px; align-items:center; padding:8px 14px; border:1px solid #2a3357; color:#c7cff3;
+      border-radius:999px; font-weight:600; background:#0d1330aa; backdrop-filter: blur(6px);
+    }
+    .btn{
+      display:inline-flex; align-items:center; gap:10px; padding:14px 22px; border-radius:12px; font-weight:800; letter-spacing:.2px; cursor:pointer;
+      border:0; background:linear-gradient(135deg, var(--brand) 0%, var(--brand2) 100%); color:#fff; box-shadow:0 10px 30px rgba(108,123,255,.35);
+      transition:transform .15s ease, box-shadow .2s ease;
+    }
+    .btn:hover{transform:translateY(-2px); box-shadow:0 14px 40px rgba(108,123,255,.45)}
+    .btn.secondary{background:#121a35; border:1px solid #24305a; box-shadow:none}
+    header.nav{
+      position:sticky; top:0; z-index:20; backdrop-filter: blur(10px);
+      background:linear-gradient(180deg, #0a0f25cc 0%, #0a0f2500 100%); border-bottom:1px solid #131a35;
+    }
+    .nav-inner{display:flex; align-items:center; justify-content:space-between; padding:14px 0}
+    .logo{display:flex; gap:10px; align-items:center; font-weight:800; letter-spacing:.2px}
+    .logo-mark{width:34px; height:34px; background:conic-gradient(from 140deg, var(--brand), var(--brand2), var(--accent)); border-radius:8px; box-shadow:0 10px 28px rgba(107,123,255,.35)}
+    .nav-cta{display:flex; gap:10px}
+    .hero{padding:70px 0 20px}
+    .hero-grid{display:grid; grid-template-columns:1.2fr .9fr; gap:36px}
+    .hero h1{
+      font-size:48px; line-height:1.05; margin:14px 0 16px; letter-spacing:-.5px;
+      text-shadow: 0 6px 40px rgba(108,123,255,.25);
+    }
+    .hero p{color:var(--muted); font-size:18px}
+    .hero-card{
+      background:linear-gradient(180deg, #0c122f, #0b0f24); border:1px solid #1a2350; padding:22px; border-radius:var(--radius); box-shadow:var(--shadow)
+    }
+    .proof{display:flex; gap:20px; align-items:center; margin-top:20px; color:#d4dbff}
+    .proof img{width:36px; height:36px; border-radius:999px; border:2px solid #22306b}
+    .divider{height:1px; background:linear-gradient(90deg, #1b2550, transparent); margin:60px 0 20px}
+    .section{padding:30px 0}
+    .cards{display:grid; grid-template-columns:repeat(3, 1fr); gap:18px}
+    .card{background:linear-gradient(180deg, #0e1330, #0b0f24); border:1px solid #1a2350; border-radius:14px; padding:18px}
+    .card h3{margin:8px 0; font-size:18px}
+    .card p{color:#b7c2df; font-size:14.5px}
+    .check{color:#49f8c7; font-weight:800}
+    .cta-band{
+      background:linear-gradient(135deg, rgba(108,123,255,.18), rgba(35,213,171,.14)); border:1px solid #23306b; border-radius:18px; padding:20px; display:flex; gap:14px; align-items:center; justify-content:space-between;
+    }
+    /* Form styles */
+    .form-wrap{background:linear-gradient(180deg, #0e1433, #0b0f22); border:1px solid #1b2552; border-radius:16px; padding:20px}
+    .form-wrap h3{margin:0 0 6px}
+    .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    .grid-1{grid-template-columns:1fr}
+    label{font-size:13px; font-weight:700; color:#d7defc; margin:8px 0 6px; display:block}
+    input, select, textarea{
+      width:100%; padding:12px 14px; background:#0a1028; color:#e9edff; border:1.5px solid #263166; border-radius:10px; font-size:14px; outline:none;
+      transition:border-color .2s ease, box-shadow .2s ease;
+    }
+    input:focus, select:focus, textarea:focus{border-color:#6c7bff; box-shadow:0 0 0 3px rgba(108,123,255,.15)}
+    textarea{min-height:100px}
+    .hint{font-size:12px; color:#9fb0e8; margin-top:4px}
+    .team-badge{display:none; margin-top:10px; padding:6px 12px; background:#0f1536; border:1px solid #293570; border-radius:999px; color:#c9d5ff; font-weight:700; width:max-content}
+    .error{display:none; color:#ff7b7b; font-size:12px; margin-top:4px}
+    .foot{padding:30px 0 60px; color:#93a2cf; font-size:13px; text-align:center}
+    @media(max-width:980px){ .hero-grid{grid-template-columns:1fr;}.cards{grid-template-columns:1fr;}.cta-band{flex-direction:column; align-items:flex-start}}
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-inner">
+      <div class="logo">
+        <div class="logo-mark"></div>
+        <div>
+          <div style="font-size:14px; color:#9fb0e8; font-weight:700; letter-spacing:.8px;">SPARTAN</div>
+          <div style="font-size:16px; font-weight:800;">Community India</div>
+        </div>
+      </div>
+      <div class="nav-cta">
+        <a href="#apply" class="btn">Apply Now</a>
+        <a href="#learn" class="btn secondary">How It Works</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <span class="badge">Elite Accountability • Daily Momentum • 10x Execution</span>
+        <h1>Stop Starting Over. Start Winning Weekly with SpartanCommunityIndia.</h1>
+        <p>We help founders and professionals build ruthless consistency, sharpen decision-making, and install simple systems that compound growth. No fluff. Only results.</p>
+        <div style="margin-top:18px; display:flex; gap:12px; flex-wrap:wrap">
+          <a href="#apply" class="btn">Get Premium Access</a>
+          <a href="#proof" class="btn secondary">See Proof</a>
+        </div>
+        <div class="proof">
+          <img src="https://placehold.co/72x72" alt="avatar" />
+          <img src="https://placehold.co/72x72" alt="avatar" />
+          <img src="https://placehold.co/72x72" alt="avatar" />
+          <div><strong>1,500+ wins</strong> shared by members • Avg. 4.9/5 satisfaction</div>
+        </div>
+      </div>
+      <div class="hero-card" id="apply">
+        <div class="form-wrap">
+          <h3>Secure Your Premium Access</h3>
+          <p style="color:#a7b6ea; margin:0 0 10px;">Fill this quick form. Get routed to the next step instantly.</p>
+          <div id="teamBadge" class="team-badge"></div>
+          <form id="leadForm">
+            <div class="grid">
+              <div>
+                <label>Full Name *</label>
+                <input type="text" id="fullName" required />
+                <div class="error" id="errName">Please enter your name</div>
+              </div>
+              <div>
+                <label>Email *</label>
+                <input type="email" id="email" required />
+                <div class="error" id="errEmail">Enter a valid email</div>
+              </div>
+              <div>
+                <label>Phone *</label>
+                <input type="tel" id="phone" placeholder="+91 98xxx xxxxx" required />
+                <div class="error" id="errPhone">Enter your phone</div>
+              </div>
+              <div>
+                <label>Can this wait? *</label>
+                <select id="urgency" required>
+                  <option value="">Select</option>
+                  <option value="no">No, I need a solution now.</option>
+                  <option value="yes">Yes, maybe later.</option>
+                </select>
+                <div class="error" id="errUrgency">Select an option</div>
+              </div>
+            </div>
+            <label>Your biggest challenge right now *</label>
+            <textarea id="challenge" placeholder="Be specific: where exactly are you stuck?" required></textarea>
+            <div class="error" id="errChallenge">Tell us your main challenge</div>
+            <div class="hint">We’ll use your inputs to personalize your next steps.</div>
+            <div style="display:flex; gap:10px; margin-top:12px">
+              <button type="submit" class="btn" style="flex:1; justify-content:center">Continue →</button>
+              <a href="#learn" class="btn secondary" style="flex:1; justify-content:center">Learn More</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="divider"></div>
+  </div>
+
+  <section class="section" id="learn">
+    <div class="container">
+      <h2 style="margin:0 0 10px">What You Get Inside</h2>
+      <p style="color:#a7b6ea; margin:0 0 16px">Built to eliminate procrastination and drive outcomes.</p>
+      <div class="cards">
+        <div class="card">
+          <div class="check">✓</div>
+          <h3>Daily Accountability</h3>
+          <p>Simple daily protocol to track and stack wins. Tiny consistent actions, big compounding results.</p>
+        </div>
+        <div class="card">
+          <div class="check">✓</div>
+          <h3>Execution Systems</h3>
+          <p>Proven frameworks to prioritize, remove noise, and ship work that actually moves the needle.</p>
+        </div>
+        <div class="card">
+          <div class="check">✓</div>
+          <h3>Elite Peer Group</h3>
+          <p>Surround yourself with serious players. Learn, share, and grow faster with momentum.</p>
+        </div>
+      </div>
+
+      <div class="cta-band" style="margin-top:22px">
+        <div>
+          <div style="font-weight:800; font-size:18px">Ready to stop restarting every Monday?</div>
+          <div style="color:#a7b6ea; font-size:14px">Apply now. If aligned, we onboard you within 24 hours.</div>
+        </div>
+        <a href="#apply" class="btn">Apply for Premium Access</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="proof">
+    <div class="container">
+      <h2 style="margin:0 0 10px">Proof. Not Promises.</h2>
+      <p style="color:#a7b6ea; margin:0 0 16px">Real transformations shared by real members.</p>
+      <div class="cards">
+        <div class="card">
+          <h3>“Closed 9 deals in 6 weeks”</h3>
+          <p>Accountability + simple tracking = ruthless follow-through. I finally executed my pipeline without burnout.</p>
+          <p style="color:#7da6ff; font-weight:700">— Ankit, Agency Owner</p>
+        </div>
+        <div class="card">
+          <h3>“From chaos to clarity”</h3>
+          <p>Spartan taught me to prioritize. Output doubled with fewer hours. No fluff. Just systems.</p>
+          <p style="color:#7da6ff; font-weight:700">— Nisha, Founder</p>
+        </div>
+        <div class="card">
+          <h3>“My best quarter, ever.”</h3>
+          <p>Targets hit, habits locked. The group energy is unreal. I finally trust my routine.</p>
+          <p style="color:#7da6ff; font-weight:700">— Raghav, Sales Lead</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="cta-band">
+        <div>
+          <div class="badge">Limited Seats • Serious Applicants Only</div>
+          <h3 style="margin:8px 0">Your next 90 days can look very different.</h3>
+          <p style="color:#a7b6ea; margin:6px 0 0">Apply now. If we’re not a fit, we’ll tell you upfront.</p>
+        </div>
+        <a href="#apply" class="btn">Start Application</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    © SpartanCommunityIndia. All rights reserved.
+  </footer>
+
+  <script>
+    // Team tracking from URL (?tm=Name)
+    const urlParams = new URLSearchParams(window.location.search);
+    const teamMember = urlParams.get('tm') || 'Direct';
+    localStorage.setItem('teamMember', teamMember);
+    if (teamMember !== 'Direct') {
+      const tb = document.getElementById('teamBadge');
+      tb.style.display = 'inline-flex';
+      tb.textContent = 'Referred by: ' + teamMember;
+    }
+
+    // Form validation + storage + route to next step (Form B)
+    const form = document.getElementById('leadForm');
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      const fullName = document.getElementById('fullName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const urgency = document.getElementById('urgency').value;
+      const challenge = document.getElementById('challenge').value.trim();
+
+      let ok = true;
+      const show = id => { const el = document.getElementById(id); el.style.display='block'; setTimeout(()=>el.style.display='none', 2500); }
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+      if(!fullName){ show('errName'); ok=false; }
+      if(!emailOk){ show('errEmail'); ok=false; }
+      if(!phone){ show('errPhone'); ok=false; }
+      if(!urgency){ show('errUrgency'); ok=false; }
+      if(!challenge){ show('errChallenge'); ok=false; }
+
+      if(!ok) return;
+
+      const formA = { fullName, email, phone, urgency, challenge, teamMember, timestamp: new Date().toISOString() };
+      localStorage.setItem('formA', JSON.stringify(formA));
+
+      // Route
+      if(urgency === 'no'){
+        // Hot → continue funnel
+        window.location.href = 'form-b-team.html';
+      } else {
+        // Nurture path (optional)
+        localStorage.setItem('leadStatus','nurture');
+        window.location.href = 'form-b-team.html';
+        // Or send to nurture page: window.location.href = 'nurture-sequence.html';
+      }
+    });
+
+    // Soft scroll
+    document.querySelectorAll('a[href^="#"]').forEach(a=>{
+      a.addEventListener('click', e=>{
+        const href = a.getAttribute('href');
+        const target = document.querySelector(href);
+        if(target){
+          e.preventDefault();
+          window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - 70, behavior:'smooth' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>

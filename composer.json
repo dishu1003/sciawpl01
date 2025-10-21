@@ -1,0 +1,12 @@
+{
+    "name": "spartan/lead-management",
+    "description": "Lead Management System for Spartan Community India",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Jules"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {}
+}
