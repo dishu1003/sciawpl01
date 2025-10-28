@@ -38,35 +38,26 @@ $pdo = get_pdo_connection();
     // Team member statistics
     $stats = [];
     
-    // Personal lead stats
-    $stats['my_leads'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE assigned_to = ?");
-    $stats['my_leads']->execute([$user_id]);
-    $stats['my_leads'] = $stats['my_leads']->fetchColumn();
-    
-    $stats['my_hot_leads'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE assigned_to = ? AND lead_score = 'HOT'");
-    $stats['my_hot_leads']->execute([$user_id]);
-    $stats['my_hot_leads'] = $stats['my_hot_leads']->fetchColumn();
-    
-    $stats['my_warm_leads'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE assigned_to = ? AND lead_score = 'WARM'");
-    $stats['my_warm_leads']->execute([$user_id]);
-    $stats['my_warm_leads'] = $stats['my_warm_leads']->fetchColumn();
-    
-    $stats['my_cold_leads'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE assigned_to = ? AND lead_score = 'COLD'");
-    $stats['my_cold_leads']->execute([$user_id]);
-    $stats['my_cold_leads'] = $stats['my_cold_leads']->fetchColumn();
-    
-    $stats['my_conversions'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE assigned_to = ? AND status = 'converted'");
-    $stats['my_conversions']->execute([$user_id]);
-    $stats['my_conversions'] = $stats['my_conversions']->fetchColumn();
-    
-    $stats['my_active_leads'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE assigned_to = ? AND status = 'active'");
-    $stats['my_active_leads']->execute([$user_id]);
-    $stats['my_active_leads'] = $stats['my_active_leads']->fetchColumn();
-    
-    // Referral stats
-    $stats['referral_leads'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE referral_code = ?");
-    $stats['referral_leads']->execute([$referral_code]);
-    $stats['referral_leads'] = $stats['referral_leads']->fetchColumn();
+    // Optimized statistics query
+    $stats_query = "
+        SELECT
+            COUNT(*) as my_leads,
+            SUM(CASE WHEN lead_score = 'HOT' THEN 1 ELSE 0 END) as my_hot_leads,
+            SUM(CASE WHEN lead_score = 'WARM' THEN 1 ELSE 0 END) as my_warm_leads,
+            SUM(CASE WHEN lead_score = 'COLD' THEN 1 ELSE 0 END) as my_cold_leads,
+            SUM(CASE WHEN status = 'converted' THEN 1 ELSE 0 END) as my_conversions,
+            SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as my_active_leads
+        FROM leads
+        WHERE assigned_to = ?
+    ";
+    $stats_stmt = $pdo->prepare($stats_query);
+    $stats_stmt->execute([$user_id]);
+    $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Referral stats (separate query as it's a different condition)
+    $referral_stmt = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE referral_code = ?");
+    $referral_stmt->execute([$referral_code]);
+    $stats['referral_leads'] = $referral_stmt->fetchColumn();
     
     // Performance metrics
     $stats['conversion_rate'] = $stats['my_leads'] > 0 ? round(($stats['my_conversions'] / $stats['my_leads']) * 100, 2) : 0;
@@ -590,7 +581,7 @@ $pdo = get_pdo_connection();
         <main class="main-content">
             <script src="/assets/js/chart.min.js"></script>
             <div class="header">
-                <h1 data-en="Welcome Back, <?php echo htmlspecialchars($user['full_name'] ?: $user['username']); ?>!" data-hi="वापसी में स्वागत है, <?php echo htmlspecialchars($user['full_name'] ?: $user['username']); ?>!">वापसी में स्वागत है, <?php echo htmlspecialchars($user['full_name'] ?: $user['username']); ?>!</h1>
+                <h1 data-en="Welcome Back, <?php echo htmlspecialchars($user['name'] ?: $user['username']); ?>!" data-hi="वापसी में स्वागत है, <?php echo htmlspecialchars($user['name'] ?: $user['username']); ?>!">वापसी में स्वागत है, <?php echo htmlspecialchars($user['name'] ?: $user['username']); ?>!</h1>
                 <p data-en="Track your leads and grow your business" data-hi="अपने लीड्स को ट्रैक करें और अपना बिजनेस बढ़ाएं">अपने लीड्स को ट्रैक करें और अपना बिजनेस बढ़ाएं</p>
             </div>
 

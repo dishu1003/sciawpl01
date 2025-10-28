@@ -1,5 +1,3 @@
-CREATE DATABASE IF NOT EXISTS lead_management;
-USE lead_management;
 
 -- ===========================
 -- USERS TABLE
