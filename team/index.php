@@ -584,52 +584,11 @@ $pdo = get_pdo_connection();
     </div>
 
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <nav class="sidebar">
-            <div class="user-profile">
-                <div class="user-avatar">
-                    <?php echo strtoupper(substr($user['username'], 0, 1)); ?>
-                </div>
-                <div class="user-name"><?php echo htmlspecialchars($user['full_name'] ?: $user['username']); ?></div>
-                <div class="user-role" data-en="Direct Seller" data-hi="डायरेक्ट सेलर">डायरेक्ट सेलर</div>
-        </div>
-            
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="/team/index.php" class="nav-link active">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <span data-en="Dashboard" data-hi="डैशबोर्ड">डैशबोर्ड</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/team/lead-management.php" class="nav-link">
-                        <i class="fas fa-users"></i>
-                        <span data-en="My Leads" data-hi="मेरे लीड्स">मेरे लीड्स</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/team/add-lead.php" class="nav-link">
-                        <i class="fas fa-user-plus"></i>
-                        <span data-en="Add Lead" data-hi="लीड जोड़ें">लीड जोड़ें</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/team/my-referrals.php" class="nav-link">
-                        <i class="fas fa-link"></i>
-                        <span data-en="My Referrals" data-hi="मेरे रेफरल">मेरे रेफरल</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/logout.php" class="nav-link">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span data-en="Logout" data-hi="लॉग आउट">लॉग आउट</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
+        <?php include __DIR__ . '/../includes/team_sidebar.php'; ?>
 
         <!-- Main Content -->
         <main class="main-content">
+            <script src="/assets/js/chart.min.js"></script>
             <div class="header">
                 <h1 data-en="Welcome Back, <?php echo htmlspecialchars($user['full_name'] ?: $user['username']); ?>!" data-hi="वापसी में स्वागत है, <?php echo htmlspecialchars($user['full_name'] ?: $user['username']); ?>!">वापसी में स्वागत है, <?php echo htmlspecialchars($user['full_name'] ?: $user['username']); ?>!</h1>
                 <p data-en="Track your leads and grow your business" data-hi="अपने लीड्स को ट्रैक करें और अपना बिजनेस बढ़ाएं">अपने लीड्स को ट्रैक करें और अपना बिजनेस बढ़ाएं</p>
@@ -707,6 +666,13 @@ $pdo = get_pdo_connection();
                     <div class="stat-value"><?php echo number_format($stats['referral_leads']); ?></div>
                     <div class="stat-label" data-en="Referral Leads" data-hi="रेफरल लीड्स">रेफरल लीड्स</div>
                 </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title" data-en="Lead Status" data-hi="लीड स्थिति">लीड स्थिति</h3>
+                </div>
+                <canvas id="leadStatusChart"></canvas>
             </div>
 
             <!-- Performance Metrics -->
@@ -894,6 +860,19 @@ $pdo = get_pdo_connection();
                 card.addEventListener('mouseleave', function() {
                     this.style.transform = 'translateY(0) scale(1)';
                 });
+            });
+
+            // Lead Status Chart
+            var leadStatusCtx = document.getElementById('leadStatusChart').getContext('2d');
+            var leadStatusChart = new Chart(leadStatusCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Hot', 'Warm', 'Cold'],
+                    datasets: [{
+                        data: [<?php echo $stats['my_hot_leads']; ?>, <?php echo $stats['my_warm_leads']; ?>, <?php echo $stats['my_cold_leads']; ?>],
+                        backgroundColor: ['#ff6b6b', '#ffd93d', '#6bcbef'],
+                    }]
+                }
             });
         });
     </script>

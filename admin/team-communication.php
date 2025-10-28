@@ -97,6 +97,44 @@ try {
                     $stmt->execute([$announcement_id]);
                     $_SESSION['success_message'] = "Announcement deleted successfully!";
                     break;
+
+                case 'send_whatsapp_team':
+                    $recipient_id = $_POST['recipient_id'];
+                    $message = trim($_POST['message']);
+
+                    if ($recipient_id === 'all') {
+                        $stmt = $pdo->query("SELECT phone FROM users WHERE role = 'team' AND status = 'active'");
+                        $recipients = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                    } else {
+                        $stmt = $pdo->prepare("SELECT phone FROM users WHERE id = ?");
+                        $stmt->execute([$recipient_id]);
+                        $recipients = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                    }
+
+                    foreach ($recipients as $recipient) {
+                        send_whatsapp_message($recipient, $message);
+                    }
+                    $_SESSION['success_message'] = "WhatsApp message sent successfully!";
+                    break;
+
+                case 'send_whatsapp_lead':
+                    $recipient_id = $_POST['recipient_id'];
+                    $message = trim($_POST['message']);
+
+                    if ($recipient_id === 'all') {
+                        $stmt = $pdo->query("SELECT phone FROM leads");
+                        $recipients = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                    } else {
+                        $stmt = $pdo->prepare("SELECT phone FROM leads WHERE id = ?");
+                        $stmt->execute([$recipient_id]);
+                        $recipients = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                    }
+
+                    foreach ($recipients as $recipient) {
+                        send_whatsapp_message($recipient, $message);
+                    }
+                    $_SESSION['success_message'] = "WhatsApp message sent successfully!";
+                    break;
             }
         }
     }
@@ -147,6 +185,35 @@ try {
     ]);
     $team_members = $recent_messages = $announcements = [];
     $stats = ['total_messages' => 0, 'unread_messages' => 0, 'urgent_messages' => 0, 'active_announcements' => 0];
+}
+
+function send_whatsapp_message($to, $message) {
+    $config = require __DIR__ . '/../config/whatsapp.php';
+    $url = "{$config['whatsapp_api_url']}/{$config['whatsapp_api_version']}/{$config['whatsapp_api_phone_number_id']}/messages";
+
+    $data = [
+        'messaging_product' => 'whatsapp',
+        'to' => $to,
+        'text' => ['body' => $message],
+    ];
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Authorization: Bearer ' . $config['whatsapp_api_token'],
+        'Content-Type: application/json',
+    ]);
+
+    $response = curl_exec($ch);
+    $error = curl_error($ch);
+    curl_close($ch);
+
+    if ($error) {
+        // Log the error
+        error_log("Error sending WhatsApp message: " . $error);
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -559,6 +626,25 @@ try {
             gap: 10px;
             margin-bottom: 20px;
         }
+
+        .tab-nav {
+            border-bottom: 2px solid #e9ecef;
+            margin-bottom: 20px;
+        }
+        .tab-link {
+            background: none;
+            border: none;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.2s ease;
+        }
+        .tab-link.active {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+        }
         
         @media (max-width: 768px) {
             .dashboard-container {
@@ -582,7 +668,7 @@ try {
 </head>
 <body>
     <nav class="dashboard-nav">
-        <h1>💬 Team Communication</h1>
+        <h1><i class="fab fa-whatsapp"></i> WhatsApp Messaging</h1>
         <div class="nav-links">
             <a href="/admin/index.php">Dashboard</a>
             <a href="/admin/leads.php">Leads</a>
@@ -634,26 +720,34 @@ try {
             </div>
         </div>
 
-        <div class="communication-grid">
-            <!-- Send Message -->
-            <div class="section">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                    <h2 class="section-title">
-                        <i class="fas fa-paper-plane"></i>
-                        Send Message
-                    </h2>
-                    <button onclick="openAnnouncementModal()" class="btn btn-primary">
-                        <i class="fas fa-bullhorn"></i> Post Announcement
-                    </button>
-                </div>
-                
-                <form method="POST" id="messageForm">
-                    <input type="hidden" name="action" value="send_message">
-                    
+        <div class="section">
+            <h2 class="section-title">Sent Messages</h2>
+            <div style="height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px;">
+                <?php
+                $log_file = __DIR__ . '/../logs/whatsapp_messages.log';
+                if (file_exists($log_file)) {
+                    $log_contents = file_get_contents($log_file);
+                    echo nl2br(htmlspecialchars($log_contents));
+                } else {
+                    echo "No messages sent yet.";
+                }
+                ?>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="tab-nav">
+                <button class="tab-link active" onclick="openTab('team')">Team Members</button>
+                <button class="tab-link" onclick="openTab('leads')">Leads</button>
+            </div>
+
+            <div id="team" class="tab-content">
+                <form method="POST" id="teamMessageForm">
+                    <input type="hidden" name="action" value="send_whatsapp_team">
                     <div class="form-group">
                         <label>Recipient</label>
-                        <select name="recipient_id" class="form-control" required>
-                            <option value="">Select Team Member</option>
+                        <select name="recipient_id" class="form-control">
+                            <option value="all">All Team Members</option>
                             <?php foreach ($team_members as $member): ?>
                                 <option value="<?php echo $member['id']; ?>">
                                     <?php echo htmlspecialchars($member['full_name'] ?: $member['username']); ?>
@@ -661,27 +755,42 @@ try {
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    
-                    <div class="form-group">
-                        <label>Subject</label>
-                        <input type="text" name="subject" class="form-control" placeholder="Message subject...">
-                    </div>
-                    
                     <div class="form-group">
                         <label>Message</label>
                         <textarea name="message" class="form-control" rows="4" required placeholder="Type your message..."></textarea>
                     </div>
-                    
-                    <div class="checkbox-group">
-                        <input type="checkbox" name="is_urgent" id="isUrgent">
-                        <label for="isUrgent">Mark as Urgent</label>
-                    </div>
-                    
                     <button type="submit" class="btn btn-primary" style="width: 100%;">
-                        <i class="fas fa-paper-plane"></i> Send Message
+                        <i class="fab fa-whatsapp"></i> Send WhatsApp Message
                     </button>
                 </form>
             </div>
+
+            <div id="leads" class="tab-content" style="display:none;">
+                <form method="POST" id="leadMessageForm">
+                    <input type="hidden" name="action" value="send_whatsapp_lead">
+                    <div class="form-group">
+                        <label>Recipient</label>
+                        <select name="recipient_id" class="form-control">
+                            <option value="all">All Leads</option>
+                            <?php
+                            $leads_stmt = $pdo->query("SELECT id, name FROM leads");
+                            $leads = $leads_stmt->fetchAll();
+                            foreach ($leads as $lead) {
+                                echo "<option value=\"{$lead['id']}\">{$lead['name']}</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Message</label>
+                        <textarea name="message" class="form-control" rows="4" required placeholder="Type your message..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <i class="fab fa-whatsapp"></i> Send WhatsApp Message
+                    </button>
+                </form>
+            </div>
+        </div>
 
             <!-- Recent Messages -->
             <div class="section">
@@ -861,6 +970,21 @@ try {
         setInterval(function() {
             location.reload();
         }, 30000);
+
+        function openTab(tabName) {
+            var i;
+            var x = document.getElementsByClassName("tab-content");
+            for (i = 0; i < x.length; i++) {
+                x[i].style.display = "none";
+            }
+            document.getElementById(tabName).style.display = "block";
+
+            var tabLinks = document.getElementsByClassName("tab-link");
+            for (i = 0; i < tabLinks.length; i++) {
+                tabLinks[i].className = tabLinks[i].className.replace(" active", "");
+            }
+            event.currentTarget.className += " active";
+        }
     </script>
 </body>
 </html>

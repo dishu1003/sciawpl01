@@ -11,7 +11,14 @@ require_once __DIR__ . '/../includes/logger.php';
 require_once __DIR__ . '/../includes/security.php';
 
 // Set security headers
-SecurityHeaders::setAll();
+function set_default_security_headers() {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-XSS-Protection: 1; mode=block');
+    header('X-Content-Type-Options: nosniff');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header("Content-Security-Policy: frame-ancestors 'self'");
+}
+set_default_security_headers();
 
 // 💡 CHANGE: Allowing both 'admin' and 'team' roles to access, 
 // but we'll show different views based on the role later.
@@ -25,6 +32,7 @@ $current_user_id = $_SESSION['user_id'];
 
 check_session_timeout();
 
+$db_status = 'ok';
 try {
     $pdo = get_pdo_connection();
 
@@ -151,7 +159,6 @@ try {
                COUNT(l.id) as total_leads,
                COUNT(CASE WHEN l.status = 'converted' THEN 1 END) as conversions,
                COUNT(d.id) as direct_downlines,
-               COALESCE(SUM(c.amount), 0) as total_commissions,
                
                -- 💡 NEW: Performance and Growth Metrics
                COUNT(CASE WHEN l.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1 END) as leads_last_7_days,
@@ -161,7 +168,6 @@ try {
             LEFT JOIN users upline ON u.upline_id = upline.id
             LEFT JOIN leads l ON u.id = l.assigned_to
             LEFT JOIN users d ON d.upline_id = u.id
-            LEFT JOIN commissions c ON u.id = c.user_id
         WHERE u.role = 'team' {$member_filter}
         GROUP BY u.id
         ORDER BY u.level DESC, conversions DESC, total_leads DESC
@@ -197,6 +203,7 @@ try {
     $team_members = [];
     $upline_options = [];
     $team_stats = array_fill_keys(['total_members', 'active_members', 'total_downlines', 'top_level'], 0);
+    $db_status = 'error';
 }
 ?>
 
@@ -269,45 +276,7 @@ try {
     </div>
 
     <div class="dashboard-container">
-        <nav class="sidebar">
-            <div class="logo">
-                <h1>👥 Team CRM</h1>
-                <p>Management</p>
-            </div>
-            
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="/admin/crm-dashboard.php" class="nav-link">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <span data-en="Dashboard" data-hi="डैशबोर्ड">डैशबोर्ड</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/leads.php" class="nav-link">
-                        <i class="fas fa-users"></i>
-                        <span data-en="Leads Management" data-hi="लीड्स प्रबंधन">लीड्स प्रबंधन</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/team.php" class="nav-link active">
-                        <i class="fas fa-user-friends"></i>
-                        <span data-en="Team Management" data-hi="टीम प्रबंधन">टीम प्रबंधन</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/advanced-analytics.php" class="nav-link">
-                        <i class="fas fa-chart-line"></i>
-                        <span data-en="Analytics" data-hi="विश्लेषण">विश्लेषण</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/logout.php" class="nav-link">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span data-en="Logout" data-hi="लॉग आउट">लॉग आउट</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
+        <?php include __DIR__ . '/../includes/sidebar.php'; ?>
     
         <main class="main-content">
             <div class="header">
@@ -362,10 +331,16 @@ try {
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h3 style="margin: 0; color: #333;" data-en="Team Members" data-hi="टीम सदस्य">टीम सदस्य</h3>
                     <?php if ($user_role === 'admin'): ?>
-                    <button onclick="openModal('addModal')" class="btn btn-success">
-                        <i class="fas fa-plus"></i>
-                        <span data-en="Add New Member" data-hi="नया सदस्य जोड़ें">नया सदस्य जोड़ें</span>
-                    </button>
+                    <div>
+                        <button onclick="generateSignupLink()" class="btn btn-primary">
+                            <i class="fas fa-link"></i>
+                            <span data-en="Generate Signup Link" data-hi="साइनअप लिंक बनाएं">साइनअप लिंक बनाएं</span>
+                        </button>
+                        <button onclick="openModal('addModal')" class="btn btn-success">
+                            <i class="fas fa-plus"></i>
+                            <span data-en="Add New Member" data-hi="नया सदस्य जोड़ें">नया सदस्य जोड़ें</span>
+                        </button>
+                    </div>
                     <?php endif; ?>
                 </div>
         
@@ -382,7 +357,6 @@ try {
                                 <th data-en="Performance" data-hi="प्रदर्शन">प्रदर्शन</th>
                                 <th data-en="Challenge" data-hi="चुनौती">चुनौती</th>
                                 <th data-en="Network" data-hi="नेटवर्क">नेटवर्क</th>
-                                <th data-en="Commissions" data-hi="कमीशन">कमीशन</th>
                                 <th data-en="Status" data-hi="स्थिति">स्थिति</th>
                                 <?php if ($user_role === 'admin'): ?>
                                     <th data-en="Actions" data-hi="कार्य">कार्य</th>
@@ -452,9 +426,6 @@ try {
                                 </td>
                                 <td>
                                     <strong><?php echo htmlspecialchars($member['direct_downlines']); ?></strong> <span data-en="downlines" data-hi="डाउनलाइन्स">डाउनलाइन्स</span>
-                                </td>
-                                <td>
-                                    ₹<?php echo number_format($member['total_commissions']); ?>
                                 </td>
                                 <td>
                                     <span class="badge <?php echo $member['status'] === 'active' ? 'badge-active' : 'badge-inactive'; ?>">
@@ -621,6 +592,25 @@ try {
             if (event.target.className === 'modal') {
                 event.target.style.display = 'none';
             }
+        }
+
+        function generateSignupLink() {
+            fetch('/api/generate_signup_token.php', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const signupLink = window.location.origin + '/team/register.php?token=' + data.token;
+                    prompt("Copy this signup link and share it with your new team member:", signupLink);
+                } else {
+                    alert('Could not generate signup link. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while generating the signup link.');
+            });
         }
 
         // Initialize interactions

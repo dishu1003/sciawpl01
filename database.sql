@@ -143,3 +143,51 @@ CREATE TABLE IF NOT EXISTS rate_limits (
     INDEX idx_identifier_action (identifier, action),
     INDEX idx_blocked_until (blocked_until)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Signup Tokens Table
+CREATE TABLE `signup_tokens` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `token` varchar(255) NOT NULL,
+  `expires_at` datetime NOT NULL,
+  `is_used` tinyint(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `token` (`token`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Reminders Table
+CREATE TABLE `reminders` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `lead_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `reminder_time` datetime NOT NULL,
+  `is_sent` tinyint(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `lead_id` (`lead_id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `reminders_ibfk_1` FOREIGN KEY (`lead_id`) REFERENCES `leads` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `reminders_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Training Materials Table
+CREATE TABLE `training_materials` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `type` enum('video','document') NOT NULL,
+  `url` varchar(255) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Goals Table
+CREATE TABLE `goals` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `target_value` int(11) NOT NULL,
+  `current_value` int(11) NOT NULL DEFAULT 0,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
