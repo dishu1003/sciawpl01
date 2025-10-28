@@ -269,45 +269,7 @@ try {
     </div>
 
     <div class="dashboard-container">
-        <nav class="sidebar">
-            <div class="logo">
-                <h1>👥 Team CRM</h1>
-                <p>Management</p>
-            </div>
-            
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="/admin/crm-dashboard.php" class="nav-link">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <span data-en="Dashboard" data-hi="डैशबोर्ड">डैशबोर्ड</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/leads.php" class="nav-link">
-                        <i class="fas fa-users"></i>
-                        <span data-en="Leads Management" data-hi="लीड्स प्रबंधन">लीड्स प्रबंधन</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/team.php" class="nav-link active">
-                        <i class="fas fa-user-friends"></i>
-                        <span data-en="Team Management" data-hi="टीम प्रबंधन">टीम प्रबंधन</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/advanced-analytics.php" class="nav-link">
-                        <i class="fas fa-chart-line"></i>
-                        <span data-en="Analytics" data-hi="विश्लेषण">विश्लेषण</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/logout.php" class="nav-link">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span data-en="Logout" data-hi="लॉग आउट">लॉग आउट</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
+        <?php include __DIR__ . '/../includes/sidebar.php'; ?>
     
         <main class="main-content">
             <div class="header">
