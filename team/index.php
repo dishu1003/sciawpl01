@@ -588,6 +588,7 @@ $pdo = get_pdo_connection();
 
         <!-- Main Content -->
         <main class="main-content">
+            <script src="/assets/js/chart.min.js"></script>
             <div class="header">
                 <h1 data-en="Welcome Back, <?php echo htmlspecialchars($user['full_name'] ?: $user['username']); ?>!" data-hi="वापसी में स्वागत है, <?php echo htmlspecialchars($user['full_name'] ?: $user['username']); ?>!">वापसी में स्वागत है, <?php echo htmlspecialchars($user['full_name'] ?: $user['username']); ?>!</h1>
                 <p data-en="Track your leads and grow your business" data-hi="अपने लीड्स को ट्रैक करें और अपना बिजनेस बढ़ाएं">अपने लीड्स को ट्रैक करें और अपना बिजनेस बढ़ाएं</p>
@@ -665,6 +666,13 @@ $pdo = get_pdo_connection();
                     <div class="stat-value"><?php echo number_format($stats['referral_leads']); ?></div>
                     <div class="stat-label" data-en="Referral Leads" data-hi="रेफरल लीड्स">रेफरल लीड्स</div>
                 </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title" data-en="Lead Status" data-hi="लीड स्थिति">लीड स्थिति</h3>
+                </div>
+                <canvas id="leadStatusChart"></canvas>
             </div>
 
             <!-- Performance Metrics -->
@@ -852,6 +860,19 @@ $pdo = get_pdo_connection();
                 card.addEventListener('mouseleave', function() {
                     this.style.transform = 'translateY(0) scale(1)';
                 });
+            });
+
+            // Lead Status Chart
+            var leadStatusCtx = document.getElementById('leadStatusChart').getContext('2d');
+            var leadStatusChart = new Chart(leadStatusCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Hot', 'Warm', 'Cold'],
+                    datasets: [{
+                        data: [<?php echo $stats['my_hot_leads']; ?>, <?php echo $stats['my_warm_leads']; ?>, <?php echo $stats['my_cold_leads']; ?>],
+                        backgroundColor: ['#ff6b6b', '#ffd93d', '#6bcbef'],
+                    }]
+                }
             });
         });
     </script>
