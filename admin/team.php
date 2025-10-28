@@ -159,7 +159,6 @@ try {
                COUNT(l.id) as total_leads,
                COUNT(CASE WHEN l.status = 'converted' THEN 1 END) as conversions,
                COUNT(d.id) as direct_downlines,
-               COALESCE(SUM(c.amount), 0) as total_commissions,
                
                -- 💡 NEW: Performance and Growth Metrics
                COUNT(CASE WHEN l.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1 END) as leads_last_7_days,
@@ -169,7 +168,6 @@ try {
             LEFT JOIN users upline ON u.upline_id = upline.id
             LEFT JOIN leads l ON u.id = l.assigned_to
             LEFT JOIN users d ON d.upline_id = u.id
-            LEFT JOIN commissions c ON u.id = c.user_id
         WHERE u.role = 'team' {$member_filter}
         GROUP BY u.id
         ORDER BY u.level DESC, conversions DESC, total_leads DESC
@@ -359,7 +357,6 @@ try {
                                 <th data-en="Performance" data-hi="प्रदर्शन">प्रदर्शन</th>
                                 <th data-en="Challenge" data-hi="चुनौती">चुनौती</th>
                                 <th data-en="Network" data-hi="नेटवर्क">नेटवर्क</th>
-                                <th data-en="Commissions" data-hi="कमीशन">कमीशन</th>
                                 <th data-en="Status" data-hi="स्थिति">स्थिति</th>
                                 <?php if ($user_role === 'admin'): ?>
                                     <th data-en="Actions" data-hi="कार्य">कार्य</th>
@@ -429,9 +426,6 @@ try {
                                 </td>
                                 <td>
                                     <strong><?php echo htmlspecialchars($member['direct_downlines']); ?></strong> <span data-en="downlines" data-hi="डाउनलाइन्स">डाउनलाइन्स</span>
-                                </td>
-                                <td>
-                                    ₹<?php echo number_format($member['total_commissions']); ?>
                                 </td>
                                 <td>
                                     <span class="badge <?php echo $member['status'] === 'active' ? 'badge-active' : 'badge-inactive'; ?>">

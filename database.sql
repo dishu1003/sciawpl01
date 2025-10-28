@@ -166,7 +166,7 @@ CREATE TABLE `reminders` (
   KEY `user_id` (`user_id`),
   CONSTRAINT `reminders_ibfk_1` FOREIGN KEY (`lead_id`) REFERENCES `leads` (`id`) ON DELETE CASCADE,
   CONSTRAINT `reminders_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-
+  
 -- Commissions Table
 CREATE TABLE `commissions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
