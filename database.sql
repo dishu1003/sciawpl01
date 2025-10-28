@@ -1,7 +1,9 @@
 CREATE DATABASE IF NOT EXISTS lead_management;
 USE lead_management;
 
--- Users Table
+-- ===========================
+-- USERS TABLE
+-- ===========================
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -14,26 +16,22 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Leads Table
+-- ===========================
+-- LEADS TABLE
+-- ===========================
 CREATE TABLE leads (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100),
     email VARCHAR(100),
     phone VARCHAR(20),
 
-    -- Form A Data
+    -- Form Data
     form_a_data JSON,
     form_a_submitted_at TIMESTAMP NULL,
-
-    -- Form B Data
     form_b_data JSON,
     form_b_submitted_at TIMESTAMP NULL,
-
-    -- Form C Data
     form_c_data JSON,
     form_c_submitted_at TIMESTAMP NULL,
-
-    -- Form D Data
     form_d_data JSON,
     form_d_submitted_at TIMESTAMP NULL,
 
@@ -50,7 +48,9 @@ CREATE TABLE leads (
     FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- Scripts Table
+-- ===========================
+-- SCRIPTS TABLE
+-- ===========================
 CREATE TABLE scripts (
     id INT AUTO_INCREMENT PRIMARY KEY,
     type ENUM('followup', 'sales', 'closing', 'objection') NOT NULL,
@@ -60,11 +60,12 @@ CREATE TABLE scripts (
     visibility ENUM('all', 'admin_only') DEFAULT 'all',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
     FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- Activity Logs Table
+-- ===========================
+-- LOGS TABLE
+-- ===========================
 CREATE TABLE logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     lead_id INT NOT NULL,
@@ -72,12 +73,13 @@ CREATE TABLE logs (
     action VARCHAR(255) NOT NULL,
     details TEXT,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
     FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- Templates Table
+-- ===========================
+-- TEMPLATES TABLE
+-- ===========================
 CREATE TABLE templates (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -87,19 +89,32 @@ CREATE TABLE templates (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert Default Admin
+-- ===========================
+-- DEFAULT ADMIN USER
+-- ===========================
 INSERT INTO users (name, email, username, password, role, unique_ref)
-VALUES ('Admin', 'admin@example.com', 'admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'admin123');
+VALUES ('Admin', 'admin@example.com', 'admin', 
+'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 
+'admin', 'admin123');
 -- Default password: password
 
--- Insert Sample Scripts
+-- ===========================
+-- SAMPLE SCRIPTS
+-- ===========================
 INSERT INTO scripts (type, title, content, created_by, visibility) VALUES
-('followup', 'Initial Follow-up Script', 'Namaste [Name], Main [Your Name] bol raha hoon. Aapne hamare form mein interest dikhaya tha. Kya aap 5 minute baat kar sakte hain?', 1, 'all'),
-('sales', 'Product Pitch Script', 'Humara program aapko [benefit 1], [benefit 2], aur [benefit 3] provide karta hai. Kya aap iske baare mein aur jaanna chahenge?', 1, 'all'),
-('objection', 'Price Objection Handler', 'Main samajh sakta hoon. Lekin soचiye, agar yeh investment aapko [ROI] de sakta hai, toh kya yeh worth it nahi hoga?', 1, 'all');
+('followup', 'Initial Follow-up Script', 
+'Namaste [Name], Main [Your Name] bol raha hoon. Aapne hamare form mein interest dikhaya tha. Kya aap 5 minute baat kar sakte hain?', 
+1, 'all'),
+('sales', 'Product Pitch Script', 
+'Humara program aapko [benefit 1], [benefit 2], aur [benefit 3] provide karta hai. Kya aap iske baare mein aur jaanna chahenge?', 
+1, 'all'),
+('objection', 'Price Objection Handler', 
+'Main samajh sakta hoon. Lekin sochiyen, agar yeh investment aapko [ROI] de sakta hai, toh kya yeh worth it nahi hoga?', 
+1, 'all');
 
--- Performance Indexes
--- Leads table indexes
+-- ===========================
+-- PERFORMANCE INDEXES
+-- ===========================
 CREATE INDEX idx_leads_email ON leads(email);
 CREATE INDEX idx_leads_phone ON leads(phone);
 CREATE INDEX idx_leads_ref_id ON leads(ref_id);
@@ -111,28 +126,26 @@ CREATE INDEX idx_leads_created_at ON leads(created_at);
 CREATE INDEX idx_leads_status_score ON leads(status, lead_score);
 CREATE INDEX idx_leads_assigned_status ON leads(assigned_to, status);
 
--- Users table indexes
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_users_unique_ref ON users(unique_ref);
 CREATE INDEX idx_users_role_status ON users(role, status);
 
--- Logs table indexes
 CREATE INDEX idx_logs_lead_id ON logs(lead_id);
 CREATE INDEX idx_logs_user_id ON logs(user_id);
 CREATE INDEX idx_logs_timestamp ON logs(timestamp);
 CREATE INDEX idx_logs_lead_timestamp ON logs(lead_id, timestamp);
 
--- Scripts table indexes
 CREATE INDEX idx_scripts_type ON scripts(type);
 CREATE INDEX idx_scripts_visibility ON scripts(visibility);
 CREATE INDEX idx_scripts_created_by ON scripts(created_by);
 
--- Templates table indexes
 CREATE INDEX idx_templates_type ON templates(type);
 CREATE INDEX idx_templates_name ON templates(name);
 
--- Rate Limits table for security
+-- ===========================
+-- RATE LIMITS TABLE
+-- ===========================
 CREATE TABLE IF NOT EXISTS rate_limits (
     id INT AUTO_INCREMENT PRIMARY KEY,
     identifier VARCHAR(64) NOT NULL,
@@ -144,50 +157,69 @@ CREATE TABLE IF NOT EXISTS rate_limits (
     INDEX idx_blocked_until (blocked_until)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Signup Tokens Table
-CREATE TABLE `signup_tokens` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `token` varchar(255) NOT NULL,
-  `expires_at` datetime NOT NULL,
-  `is_used` tinyint(1) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `token` (`token`)
+-- ===========================
+-- SIGNUP TOKENS TABLE
+-- ===========================
+CREATE TABLE signup_tokens (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  token VARCHAR(255) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  is_used TINYINT(1) NOT NULL DEFAULT 0,
+  UNIQUE KEY token (token)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Reminders Table
-CREATE TABLE `reminders` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `lead_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `reminder_time` datetime NOT NULL,
-  `is_sent` tinyint(1) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  KEY `lead_id` (`lead_id`),
-  KEY `user_id` (`user_id`),
-  CONSTRAINT `reminders_ibfk_1` FOREIGN KEY (`lead_id`) REFERENCES `leads` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `reminders_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+-- ===========================
+-- REMINDERS TABLE
+-- ===========================
+CREATE TABLE reminders (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  lead_id INT NOT NULL,
+  user_id INT NOT NULL,
+  reminder_time DATETIME NOT NULL,
+  is_sent TINYINT(1) NOT NULL DEFAULT 0,
+  KEY lead_id (lead_id),
+  KEY user_id (user_id),
+  CONSTRAINT reminders_lead_fk FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE,
+  CONSTRAINT reminders_user_fk FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Training Materials Table
-CREATE TABLE `training_materials` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `title` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `type` enum('video','document') NOT NULL,
-  `url` varchar(255) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`)
+-- ===========================
+-- TRAINING MATERIALS TABLE
+-- ===========================
+CREATE TABLE training_materials (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT DEFAULT NULL,
+  type ENUM('video','document') NOT NULL,
+  url VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Goals Table
-CREATE TABLE `goals` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `target_value` int(11) NOT NULL,
-  `current_value` int(11) NOT NULL DEFAULT 0,
-  `start_date` date NOT NULL,
-  `end_date` date NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`)
+-- ===========================
+-- GOALS TABLE
+-- ===========================
+CREATE TABLE goals (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description TEXT DEFAULT NULL,
+  target_value INT NOT NULL,
+  current_value INT DEFAULT 0,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ===========================
+-- COMMISSIONS TABLE
+-- ===========================
+CREATE TABLE commissions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  lead_id INT NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  KEY user_id (user_id),
+  KEY lead_id (lead_id),
+  CONSTRAINT commissions_user_fk FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT commissions_lead_fk FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
