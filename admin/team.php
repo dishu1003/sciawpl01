@@ -362,10 +362,16 @@ try {
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h3 style="margin: 0; color: #333;" data-en="Team Members" data-hi="टीम सदस्य">टीम सदस्य</h3>
                     <?php if ($user_role === 'admin'): ?>
-                    <button onclick="openModal('addModal')" class="btn btn-success">
-                        <i class="fas fa-plus"></i>
-                        <span data-en="Add New Member" data-hi="नया सदस्य जोड़ें">नया सदस्य जोड़ें</span>
-                    </button>
+                    <div>
+                        <button onclick="generateSignupLink()" class="btn btn-primary">
+                            <i class="fas fa-link"></i>
+                            <span data-en="Generate Signup Link" data-hi="साइनअप लिंक बनाएं">साइनअप लिंक बनाएं</span>
+                        </button>
+                        <button onclick="openModal('addModal')" class="btn btn-success">
+                            <i class="fas fa-plus"></i>
+                            <span data-en="Add New Member" data-hi="नया सदस्य जोड़ें">नया सदस्य जोड़ें</span>
+                        </button>
+                    </div>
                     <?php endif; ?>
                 </div>
         
@@ -621,6 +627,25 @@ try {
             if (event.target.className === 'modal') {
                 event.target.style.display = 'none';
             }
+        }
+
+        function generateSignupLink() {
+            fetch('/api/generate_signup_token.php', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const signupLink = window.location.origin + '/team/register.php?token=' + data.token;
+                    prompt("Copy this signup link and share it with your new team member:", signupLink);
+                } else {
+                    alert('Could not generate signup link. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while generating the signup link.');
+            });
         }
 
         // Initialize interactions
