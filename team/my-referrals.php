@@ -35,39 +35,21 @@ try {
     $referral_code = 'REF' . str_pad($user_id, 6, '0', STR_PAD_LEFT);
     $referral_link = "https://" . $_SERVER['HTTP_HOST'] . "/?ref=" . $referral_code;
     
-    // Get referral statistics
-    $stats = [];
-    
-    // Total referral leads
-    $stats['total_referral_leads'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE referral_code = ?");
-    $stats['total_referral_leads']->execute([$referral_code]);
-    $stats['total_referral_leads'] = $stats['total_referral_leads']->fetchColumn();
-    
-    // Referral leads by score
-    $stats['hot_referral_leads'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE referral_code = ? AND lead_score = 'HOT'");
-    $stats['hot_referral_leads']->execute([$referral_code]);
-    $stats['hot_referral_leads'] = $stats['hot_referral_leads']->fetchColumn();
-    
-    $stats['warm_referral_leads'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE referral_code = ? AND lead_score = 'WARM'");
-    $stats['warm_referral_leads']->execute([$referral_code]);
-    $stats['warm_referral_leads'] = $stats['warm_referral_leads']->fetchColumn();
-    
-    $stats['cold_referral_leads'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE referral_code = ? AND lead_score = 'COLD'");
-    $stats['cold_referral_leads']->execute([$referral_code]);
-    $stats['cold_referral_leads'] = $stats['cold_referral_leads']->fetchColumn();
-    
-    // Referral conversions
-    $stats['referral_conversions'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE referral_code = ? AND status = 'converted'");
-    $stats['referral_conversions']->execute([$referral_code]);
-    $stats['referral_conversions'] = $stats['referral_conversions']->fetchColumn();
-    
-    // This month referral leads
-    $stats['this_month_referrals'] = $pdo->prepare("
-        SELECT COUNT(*) FROM leads 
-        WHERE referral_code = ? AND MONTH(created_at) = MONTH(CURDATE()) AND YEAR(created_at) = YEAR(CURDATE())
-    ");
-    $stats['this_month_referrals']->execute([$referral_code]);
-    $stats['this_month_referrals'] = $stats['this_month_referrals']->fetchColumn();
+    // Optimized referral statistics query
+    $stats_query = "
+        SELECT
+            COUNT(*) as total_referral_leads,
+            SUM(CASE WHEN lead_score = 'HOT' THEN 1 ELSE 0 END) as hot_referral_leads,
+            SUM(CASE WHEN lead_score = 'WARM' THEN 1 ELSE 0 END) as warm_referral_leads,
+            SUM(CASE WHEN lead_score = 'COLD' THEN 1 ELSE 0 END) as cold_referral_leads,
+            SUM(CASE WHEN status = 'converted' THEN 1 ELSE 0 END) as referral_conversions,
+            SUM(CASE WHEN MONTH(created_at) = MONTH(CURDATE()) AND YEAR(created_at) = YEAR(CURDATE()) THEN 1 ELSE 0 END) as this_month_referrals
+        FROM leads
+        WHERE referral_code = ?
+    ";
+    $stats_stmt = $pdo->prepare($stats_query);
+    $stats_stmt->execute([$referral_code]);
+    $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
     
     // Performance metrics
     $stats['referral_conversion_rate'] = $stats['total_referral_leads'] > 0 ? round(($stats['referral_conversions'] / $stats['total_referral_leads']) * 100, 2) : 0;

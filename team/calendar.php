@@ -110,17 +110,15 @@ document.addEventListener('DOMContentLoaded', function() {
     var reminderSound = new Audio('/assets/sounds/alert.mp3');
 
     // load reminders from PHP into JS array
-    const reminders = [
-        <?php foreach ($reminders as $r): ?>
-        {
-            id: <?php echo (int)$r['id']; ?>,
-            datetime: '<?php echo date('Y-m-d H:i:s', strtotime($r['reminder_time'])); ?>',
-            lead: '<?php echo addslashes($r['lead_name']); ?>',
-            lead_id: <?php echo (int)$r['lead_id']; ?>,
-            notified: false
-        },
-        <?php endforeach; ?>
-    ];
+    const reminders = <?php echo json_encode(array_map(function($r) {
+        return [
+            'id' => (int)$r['id'],
+            'datetime' => date('Y-m-d H:i:s', strtotime($r['reminder_time'])),
+            'lead' => $r['lead_name'],
+            'lead_id' => (int)$r['lead_id'],
+            'notified' => false
+        ];
+    }, $reminders)); ?>;
 
     // render events on calendar
     reminders.forEach(r => {

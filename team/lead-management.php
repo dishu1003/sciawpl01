@@ -26,17 +26,21 @@ $user_id = $_SESSION['user_id'];
 try {
     $pdo = get_pdo_connection();
     
-    // Handle form submissions
+    // Handle form submissions with CSRF protection
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (!verify_csrf_token()) {
+            die('CSRF validation failed.');
+        }
+
         if (isset($_POST['action'])) {
             switch ($_POST['action']) {
                 case 'add_lead':
                     $name = trim($_POST['name']);
-                    $email = trim($_POST['email']);
+                    $email = filter_var(trim($_POST['email']), FILTER_VALIDATE_EMAIL);
                     $phone = trim($_POST['phone']);
                     $source = trim($_POST['source']);
                     $notes = trim($_POST['notes']);
-                    $lead_score = $_POST['lead_score'];
+                    $lead_score = in_array($_POST['lead_score'], ['HOT', 'WARM', 'COLD']) ? $_POST['lead_score'] : 'WARM';
                     
                     if ($name && $email) {
                         $stmt = $pdo->prepare("
@@ -52,16 +56,18 @@ try {
                     break;
                     
                 case 'update_lead':
-                    $lead_id = $_POST['lead_id'];
-                    $status = $_POST['status'];
+                    $lead_id = filter_var($_POST['lead_id'], FILTER_VALIDATE_INT);
+                    $status = in_array($_POST['status'], ['active', 'converted', 'lost']) ? $_POST['status'] : 'active';
                     $notes = trim($_POST['notes']);
                     
-                    $stmt = $pdo->prepare("UPDATE leads SET status = ?, notes = ?, updated_at = NOW() WHERE id = ? AND assigned_to = ?");
-                    $stmt->execute([$status, $notes, $lead_id, $user_id]);
-                    
-                    $_SESSION['success_message'] = "Lead updated successfully!";
-                    header('Location: /team/lead-management.php');
-                    exit;
+                    if ($lead_id) {
+                        $stmt = $pdo->prepare("UPDATE leads SET status = ?, notes = ?, updated_at = NOW() WHERE id = ? AND assigned_to = ?");
+                        $stmt->execute([$status, $notes, $lead_id, $user_id]);
+
+                        $_SESSION['success_message'] = "Lead updated successfully!";
+                        header('Location: /team/lead-management.php');
+                        exit;
+                    }
                     break;
             }
         }

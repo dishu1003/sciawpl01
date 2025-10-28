@@ -3,7 +3,7 @@
         <div class="user-avatar">
             <?php echo strtoupper(substr($user['username'], 0, 1)); ?>
         </div>
-        <div class="user-name"><?php echo htmlspecialchars($user['full_name'] ?: $user['username']); ?></div>
+        <div class="user-name"><?php echo htmlspecialchars($user['name'] ?: $user['username']); ?></div>
         <div class="user-role" data-en="Direct Seller" data-hi="डायरेक्ट सेलर">डायरेक्ट सेलर</div>
     </div>
 
@@ -22,7 +22,7 @@
         </li>
         <li class="nav-item">
             <a href="/team/add-lead.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'add-lead.php' ? 'active' : ''; ?>">
-                <i class="fas fa-user-plus"></i>
+                <i class="fas fa-plus-circle"></i>
                 <span data-en="Add Lead" data-hi="लीड जोड़ें">लीड जोड़ें</span>
             </a>
         </li>
