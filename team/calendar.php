@@ -7,6 +7,7 @@ $user_id = $_SESSION['user_id'];
 
 try {
     $pdo = get_pdo_connection();
+
   feature-team-management-improvements
     $user_stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
     $user_stmt->execute([$user_id]);
