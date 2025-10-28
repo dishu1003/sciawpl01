@@ -269,45 +269,7 @@ try {
     </div>
 
     <div class="dashboard-container">
-        <nav class="sidebar">
-            <div class="logo">
-                <h1>👥 Team CRM</h1>
-                <p>Management</p>
-            </div>
-            
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="/admin/crm-dashboard.php" class="nav-link">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <span data-en="Dashboard" data-hi="डैशबोर्ड">डैशबोर्ड</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/leads.php" class="nav-link">
-                        <i class="fas fa-users"></i>
-                        <span data-en="Leads Management" data-hi="लीड्स प्रबंधन">लीड्स प्रबंधन</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/team.php" class="nav-link active">
-                        <i class="fas fa-user-friends"></i>
-                        <span data-en="Team Management" data-hi="टीम प्रबंधन">टीम प्रबंधन</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/advanced-analytics.php" class="nav-link">
-                        <i class="fas fa-chart-line"></i>
-                        <span data-en="Analytics" data-hi="विश्लेषण">विश्लेषण</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/logout.php" class="nav-link">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span data-en="Logout" data-hi="लॉग आउट">लॉग आउट</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
+        <?php include __DIR__ . '/../includes/sidebar.php'; ?>
     
         <main class="main-content">
             <div class="header">
@@ -362,10 +324,16 @@ try {
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h3 style="margin: 0; color: #333;" data-en="Team Members" data-hi="टीम सदस्य">टीम सदस्य</h3>
                     <?php if ($user_role === 'admin'): ?>
-                    <button onclick="openModal('addModal')" class="btn btn-success">
-                        <i class="fas fa-plus"></i>
-                        <span data-en="Add New Member" data-hi="नया सदस्य जोड़ें">नया सदस्य जोड़ें</span>
-                    </button>
+                    <div>
+                        <button onclick="generateSignupLink()" class="btn btn-primary">
+                            <i class="fas fa-link"></i>
+                            <span data-en="Generate Signup Link" data-hi="साइनअप लिंक बनाएं">साइनअप लिंक बनाएं</span>
+                        </button>
+                        <button onclick="openModal('addModal')" class="btn btn-success">
+                            <i class="fas fa-plus"></i>
+                            <span data-en="Add New Member" data-hi="नया सदस्य जोड़ें">नया सदस्य जोड़ें</span>
+                        </button>
+                    </div>
                     <?php endif; ?>
                 </div>
         
@@ -621,6 +589,25 @@ try {
             if (event.target.className === 'modal') {
                 event.target.style.display = 'none';
             }
+        }
+
+        function generateSignupLink() {
+            fetch('/api/generate_signup_token.php', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const signupLink = window.location.origin + '/team/register.php?token=' + data.token;
+                    prompt("Copy this signup link and share it with your new team member:", signupLink);
+                } else {
+                    alert('Could not generate signup link. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while generating the signup link.');
+            });
         }
 
         // Initialize interactions
