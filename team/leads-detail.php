@@ -41,6 +41,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: /team/lead-detail.php?id=' . $lead_id);
         exit;
     }
+
+    if (isset($_POST['set_reminder'])) {
+        $reminder_time = $_POST['reminder_time'];
+        $stmt = $pdo->prepare("INSERT INTO reminders (lead_id, user_id, reminder_time) VALUES (?, ?, ?)");
+        $stmt->execute([$lead_id, $user['id'], $reminder_time]);
+        header('Location: /team/leads-detail.php?id=' . $lead_id);
+        exit;
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -94,6 +102,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <option value="COLD">COLD</option>
                 </select>
                 <button type="submit" name="update_score">Update</button>
+            </form>
+
+            <form method="POST" style="display:inline;">
+                <input type="datetime-local" name="reminder_time" required>
+                <button type="submit" name="set_reminder">Set Reminder</button>
             </form>
         </div>
         
