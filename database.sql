@@ -166,4 +166,18 @@ CREATE TABLE `reminders` (
   KEY `user_id` (`user_id`),
   CONSTRAINT `reminders_ibfk_1` FOREIGN KEY (`lead_id`) REFERENCES `leads` (`id`) ON DELETE CASCADE,
   CONSTRAINT `reminders_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+  
+-- Commissions Table
+CREATE TABLE `commissions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `lead_id` int(11) NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  KEY `lead_id` (`lead_id`),
+  CONSTRAINT `commissions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `commissions_ibfk_2` FOREIGN KEY (`lead_id`) REFERENCES `leads` (`id`) ON DELETE CASCADE
+
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
