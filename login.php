@@ -1,16 +1,20 @@
 <?php
-/**
- * Login Page
- * Handles user authentication with security features
- */
+// ... header comments ...
 
 require_once __DIR__ . '/includes/init.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/logger.php';
-require_once __DIR__ . '/includes/security.php';
+require_once __DIR__ . '/includes/security.php'; // This includes the 'EnhancedSecurity' class
 
-// Set security headers
-SecurityHeaders::setAll();
+// 💡 FIX: Manually define the security header function and call it,
+// replacing the missing 'SecurityHeaders::setAll()' call.
+function set_default_security_headers() {
+    header('X-Frame-Options: SAMEORIGIN'); 
+    header('X-XSS-Protection: 1; mode=block');
+    header('X-Content-Type-Options: nosniff');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header("Content-Security-Policy: frame-ancestors 'self'");
+}
 
 // Redirect if already logged in
 if (is_logged_in()) {

@@ -1,7 +1,94 @@
 <?php
-require_once __DIR__ . '/includes/init.php';
+// --- START: CONFIG AND INITIALIZATION ---
+// This block is updated to explicitly include both files, assuming they define the necessary 
+// functions (like get_pdo_connection()) and start the session.
+// NOTE: You must ensure these files exist at the paths shown below.
+require_once __DIR__ . '/config/config.php';
+require_once __DIR__ . '/includes/init.php'; 
+
+// 2. Ensure session is running
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+// --- END: CONFIG AND INITIALIZATION ---
+
+// Handle referral code
 $ref = $_GET['ref'] ?? ($_SESSION['ref'] ?? null);
-if ($ref) { $_SESSION['ref'] = $ref; }
+if ($ref) { 
+    $_SESSION['ref'] = $ref; 
+}
+
+// Initialize error message variable
+$error_message = null;
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $submission_successful = false;
+
+    // Check for required variables before proceeding
+    if (function_exists('get_pdo_connection')) {
+        try {
+            $pdo = get_pdo_connection();
+            
+            $name = trim($_POST['name']);
+            $email = trim($_POST['email']);
+            $phone = trim($_POST['phone']);
+            $city = trim($_POST['city']);
+            $referral_code = $_SESSION['ref'] ?? null;
+            
+            if ($name && $email && $phone && $city) {
+                // Check if referral code exists and get assigned user
+                $assigned_to = null;
+                if ($referral_code) {
+                    $stmt = $pdo->prepare("SELECT id FROM users WHERE referral_code = ? AND role = 'team' AND status = 'active'");
+                    $stmt->execute([$referral_code]);
+                    $assigned_to = $stmt->fetchColumn();
+                }
+                
+                // Insert lead
+                $stmt = $pdo->prepare("
+                    INSERT INTO leads (name, email, phone, city, source, referral_code, assigned_to, lead_score, status, created_at) 
+                    VALUES (?, ?, ?, ?, 'Website', ?, ?, 'COLD', 'active', NOW())
+                ");
+                
+                // Check if execution was successful
+                if ($stmt->execute([$name, $email, $phone, $city, $referral_code, $assigned_to])) {
+                    $submission_successful = true;
+                }
+                
+                if ($submission_successful) {
+                    // Clear referral session
+                    unset($_SESSION['ref']);
+                    
+                    // Create WhatsApp message
+                    $whatsapp_message = urlencode("Know More");
+                    $whatsapp_url = "https://wa.me/919165154400?text={$whatsapp_message}";
+                    
+                    // Redirect to WhatsApp (JS based)
+                    echo "<script>
+                    window.location.href = '{$whatsapp_url}';
+                    </script>";
+                    exit;
+                } else {
+                     $error_message = 'डेटाबेस में लीड सेव नहीं हो सकी। कृपया पुनः प्रयास करें। (Could not save lead to the database. Please try again.)';
+                }
+            } else {
+                 $error_message = 'कृपया सुनिश्चित करें कि आपने सभी फ़ील्ड सही ढंग से भरे हैं। (Please ensure all fields are filled correctly.)';
+            }
+        } catch (PDOException $e) {
+            error_log('Lead submission error: ' . $e->getMessage());
+            // Check for common Duplicate entry error (error code 23000 in MySQL)
+            if ($e->getCode() === '23000' || strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                 $error_message = 'यह ईमेल या फ़ोन नंबर पहले से ही पंजीकृत है। (This email or phone number is already registered.)';
+            } else {
+                 $error_message = 'क्षमा करें, सबमिशन में तकनीकी त्रुटि आई है। कृपया व्यवस्थापक से संपर्क करें। (Sorry, a technical error occurred during submission. Please contact administrator.)';
+            }
+        }
+    } else {
+        error_log('get_pdo_connection() function is not defined. Check includes/init.php.');
+        $error_message = 'Configuration Error: Database connection function is missing (check includes/init.php).';
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -18,6 +105,7 @@ if ($ref) { $_SESSION['ref'] = $ref; }
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
+        /* General Reset and Typography */
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -27,6 +115,26 @@ if ($ref) { $_SESSION['ref'] = $ref; }
             overflow-x:hidden;
         }
         .container { max-width:1200px; margin:0 auto; padding:0 20px; }
+        
+        /* Message Box Styling */
+        #messageBox {
+            display: none; 
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #ef4444; /* Red background for error */
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            font-weight: 600;
+            z-index: 2000;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* Hero Section */
         .hero {
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
             color:#fff;
@@ -117,7 +225,7 @@ if ($ref) { $_SESSION['ref'] = $ref; }
             height:100%;
         }
         
-        /* Social Proof */
+        /* Social Proof & Stats */
         .social-proof {
             background:#fff;
             padding:60px 20px;
@@ -292,6 +400,7 @@ if ($ref) { $_SESSION['ref'] = $ref; }
             padding:50px;
             border-radius:16px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative; /* For Message Box positioning */
         }
         .form-header {
             text-align:center;
@@ -307,31 +416,6 @@ if ($ref) { $_SESSION['ref'] = $ref; }
             color:#6b7280;
             font-size:1.1rem;
         }
-        .step-indicator {
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            gap:10px;
-            margin-bottom:30px;
-        }
-        .step-indicator span {
-            font-weight:700;
-            color:#667eea;
-        }
-        .progress-bar {
-            flex:1;
-            height:8px;
-            background:#e5e7eb;
-            border-radius:10px;
-            overflow:hidden;
-            max-width:200px;
-        }
-        .progress-fill {
-            height:100%;
-            width:25%;
-            background:linear-gradient(90deg, #10b981, #059669);
-            border-radius:10px;
-        }
         .form-group {
             margin-bottom:25px;
         }
@@ -342,7 +426,6 @@ if ($ref) { $_SESSION['ref'] = $ref; }
             color:#374151;
         }
         .form-group input,
-        .form-group textarea,
         .form-group select {
             width:100%;
             padding:14px 16px;
@@ -353,15 +436,10 @@ if ($ref) { $_SESSION['ref'] = $ref; }
             transition: border-color 0.2s, box-shadow 0.2s;
         }
         .form-group input:focus,
-        .form-group textarea:focus,
         .form-group select:focus {
             outline:none;
             border-color:#667eea;
             box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
-        }
-        .form-group textarea {
-            resize:vertical;
-            min-height:100px;
         }
         .hint {
             display:block;
@@ -438,14 +516,102 @@ if ($ref) { $_SESSION['ref'] = $ref; }
             50% { opacity:0.3; }
         }
         
+        /* Floating Action Button */
+        .floating-btn {
+            position:fixed;
+            bottom:30px;
+            right:30px;
+            background:#10b981;
+            color:#fff;
+            padding:18px 30px;
+            border-radius:50px;
+            font-size:1.1rem;
+            font-weight:700;
+            text-decoration:none;
+            box-shadow: 0 10px 40px rgba(16,185,129,0.5);
+            z-index:999;
+            transition: transform 0.3s, box-shadow 0.3s;
+            animation: floatBounce 2s infinite;
+        }
+        .floating-btn:hover {
+            transform:translateY(-5px);
+            box-shadow: 0 15px 50px rgba(16,185,129,0.6);
+        }
+        @keyframes floatBounce {
+            0%, 100% { transform:translateY(0); }
+            50% { transform:translateY(-10px); }
+        }
+        
+        /* Sticky Header CTA */
+        .sticky-header-cta {
+            position:fixed;
+            top:60px;
+            left:50%;
+            transform:translateX(-50%);
+            background:#fff;
+            padding:12px 30px;
+            border-radius:50px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.2);
+            z-index:998;
+            opacity:0;
+            pointer-events:none;
+            transition: opacity 0.3s;
+        }
+        .sticky-header-cta.visible {
+            opacity:1;
+            pointer-events:all;
+        }
+        .sticky-header-cta a {
+            background:#10b981;
+            color:#fff;
+            padding:12px 25px;
+            border-radius:30px;
+            font-weight:700;
+            text-decoration:none;
+            display:inline-block;
+            transition: transform 0.2s;
+        }
+        .sticky-header-cta a:hover {
+            transform:scale(1.05);
+        }
+        
         @media (max-width: 768px) {
             .hero { padding:40px 20px 60px; }
             .form-container { padding:30px 20px; }
             .stats { grid-template-columns:1fr; }
+            .floating-btn {
+                bottom:20px;
+                right:20px;
+                padding:15px 25px;
+                font-size:1rem;
+            }
+            .sticky-header-cta {
+                top:65px;
+                padding:10px 20px;
+            }
+            .sticky-header-cta a {
+                padding:10px 20px;
+                font-size:0.9rem;
+            }
         }
     </style>
 </head>
 <body>
+
+    <!-- Message Box (Alert() replacement) -->
+    <div id="messageBox">
+        <span id="messageText"></span>
+    </div>
+
+    <!-- Floating CTA Button -->
+    <a href="#form" class="floating-btn">
+        📝 अभी भरें Form
+    </a>
+
+    <!-- Sticky Header CTA (appears on scroll) -->
+    <div class="sticky-header-cta" id="stickyHeaderCta">
+        <a href="#form">🚀 Free Access पाएं - Form भरें</a>
+    </div>
 
     <!-- Urgency Bar -->
     <div class="urgency-bar">
@@ -485,6 +651,18 @@ if ($ref) { $_SESSION['ref'] = $ref; }
                     <span>No Credit Card</span>
                 </div>
             </div>
+            
+            <div style="text-align:center; margin-top:50px; padding:40px; background:#f9fafb; border-radius:16px;">
+                <h3 style="font-size:1.8rem; color:#1f2937; font-weight:800; margin-bottom:20px;">
+                    🤔 अभी भी सोच रहे हैं?
+                </h3>
+                <p style="font-size:1.2rem; color:#6b7280; margin-bottom:25px;">
+                    हर रोज़ हज़ारों लोग यह मौका गंवा देते हैं। आप उनमें से मत बनिए!
+                </p>
+                <a href="#form" class="cta-primary">
+                    ✅ नहीं, मैं यह मौका नहीं गंवाऊंगा
+                </a>
+            </div>
         </div>
     </section>
 
@@ -504,7 +682,13 @@ if ($ref) { $_SESSION['ref'] = $ref; }
             
             <div class="live-counter">
                 <div class="live-dot"></div>
-                <strong>347 people</strong> are watching this video right now
+                <strong>🎯 Limited Time Offer:</strong> अगले 24 घंटे में form भरने वाले पहले 50 लोगों को Exclusive Bonus Training मिलेगी!
+            </div>
+            
+            <div style="text-align:center; margin-top:30px;">
+                <a href="#form" class->
+                    📝 हाँ! मुझे यह चाहिए - Form भरें
+                </a>
             </div>
         </div>
     </section>
@@ -512,6 +696,14 @@ if ($ref) { $_SESSION['ref'] = $ref; }
     <!-- Social Proof -->
     <section class="social-proof">
         <div class="container">
+            <div style="background:linear-gradient(135deg, #fbbf24, #f59e0b); color:#fff; padding:30px; border-radius:16px; text-align:center; margin-bottom:50px; box-shadow:0 10px 40px rgba(251,191,36,0.3);">
+                <h3 style="font-size:2rem; font-weight:800; margin-bottom:15px;">⚡ सीमित समय का ऑफर!</h3>
+                <p style="font-size:1.3rem; font-weight:600;">आज ही फॉर्म भरें और पाएं <span style="background:#fff; color:#f59e0b; padding:5px 15px; border-radius:8px;">₹9,999 का FREE Training Bonus!</span></p>
+                <a href="#form" class="cta-primary" style="margin-top:20px; display:inline-block;">
+                    💎 अभी Claim करें
+                </a>
+            </div>
+
             <div class="stats">
                 <div class="stat-box">
                     <div class="stat-number">1,247+</div>
@@ -574,6 +766,15 @@ if ($ref) { $_SESSION['ref'] = $ref; }
                         </div>
                     </div>
                 </div>
+            </div>
+            
+            <div style="text-align:center; margin-top:50px; background:#fff3cd; padding:30px; border-radius:12px; border:2px dashed #ffc107;">
+                <p style="font-size:1.3rem; color:#856404; font-weight:700; margin-bottom:15px;">
+                    ⏰ याद रखें: जो लोग आज action लेते हैं, वही कल successful होते हैं!
+                </p>
+                <a href="#form" class="cta-primary">
+                    🎯 अपना Future Secure करें - Form भरें
+                </a>
             </div>
         </div>
     </section>
@@ -656,6 +857,18 @@ if ($ref) { $_SESSION['ref'] = $ref; }
                     <p>Connect with 1,000+ like-minded achievers who support and inspire each other.</p>
                 </div>
             </div>
+            
+            <div style="text-align:center; margin-top:60px; padding:50px 30px; background:linear-gradient(135deg, #e0f2fe, #bae6fd); border-radius:16px;">
+                <h3 style="font-size:2.2rem; color:#0c4a6e; font-weight:800; margin-bottom:20px;">
+                    💡 सिर्फ 2 मिनट में अपनी ज़िन्दगी बदलें!
+                </h3>
+                <p style="font-size:1.2rem; color:#075985; margin-bottom:30px;">
+                    बस नीचे दिया हुआ form भरें और देखें कैसे हज़ारों लोगों ने अपने सपने पूरे किए।
+                </p>
+                <a href="#form" class="cta-primary" style="font-size:1.3rem; padding:20px 50px;">
+                    👇 अभी Form भरें - 100% FREE
+                </a>
+            </div>
         </div>
     </section>
 
@@ -663,59 +876,40 @@ if ($ref) { $_SESSION['ref'] = $ref; }
     <section class="form-section" id="form">
         <div class="form-container">
             <div class="form-header">
-                <h2>Exclusive Access: Step 1 of 4</h2>
-                <p>एक्सक्लूसिव एक्सेस: स्टेप 1 ऑफ़ 4</p>
+                <h2>अपनी जानकारी भरें</h2>
+                <p>Get Instant Access to Life-Changing Opportunity</p>
             </div>
 
-            <div class="step-indicator">
-                <span>Step 1 of 4</span>
-                <div class="progress-bar">
-                    <div class="progress-fill"></div>
-                </div>
-            </div>
-
-            <form id="formA" method="POST" action="/forms/submit_a.php">
-                <?php echo CSRF::inputField(); ?>
-                <input type="hidden" name="ref_id" value="<?php echo htmlspecialchars($ref ?? ''); ?>">
+            <form method="POST" action="">
+                <input type="hidden" name="ref" value="<?php echo htmlspecialchars($ref ?? ''); ?>">
 
                 <div class="form-group">
-                    <label for="full_name">Your Full Name (आपका पूरा नाम) *</label>
-                    <input type="text" id="full_name" name="full_name" required placeholder="e.g., Rohan Gupta" autocomplete="name">
+                    <label for="name">आपका नाम (Your Name) *</label>
+                    <input type="text" id="name" name="name" required placeholder="उदाहरण: राहुल शर्मा" autocomplete="name">
                 </div>
 
                 <div class="form-group">
-                    <label for="best_email">Your Best Email Address (आपका सबसे अच्छा ईमेल पता) *</label>
-                    <input type="email" id="best_email" name="best_email" required placeholder="name@example.com" autocomplete="email">
-                    <span class="hint">We'll send your exclusive training link here</span>
+                    <label for="phone">व्हाट्सएप नंबर (WhatsApp Number) *</label>
+                    <input type="tel" id="phone" name="phone" required placeholder="उदाहरण: 9876543210" pattern="[0-9]{10}" inputmode="numeric">
+                    <span class="hint">10 अंकों का नंबर डालें (बिना +91 के)</span>
                 </div>
 
                 <div class="form-group">
-                    <label for="phone">Your Phone Number (आपका फ़ोन नंबर)</label>
-                    <input type="tel" id="phone" name="phone" placeholder="e.g., 98765 43210" inputmode="numeric">
-                    <span class="hint">Optional | WhatsApp preferred</span>
+                    <label for="email">ईमेल आईडी (Email ID) *</label>
+                    <input type="email" id="email" name="email" required placeholder="उदाहरण: name@example.com" autocomplete="email">
                 </div>
 
                 <div class="form-group">
-                    <label for="reason_insomnia">आज आप रात को क्यों नहीं सो पा रहे हैं? (Why are you losing sleep tonight?) *</label>
-                    <textarea id="reason_insomnia" name="reason_insomnia" required placeholder="Describe your biggest challenge..."></textarea>
-                    <span class="hint">Be honest—this helps us personalize your strategy</span>
-                </div>
-
-                <div class="form-group">
-                    <label for="three_months_ready">क्या आप इस समस्या के साथ और 3 महीने बिताने को तैयार हैं? *</label>
-                    <select id="three_months_ready" name="three_months_ready" required>
-                        <option value="">Select an option / विकल्प चुनें</option>
-                        <option value="no_need_solution_now">No, I need a solution now. (नहीं, मुझे अभी समाधान चाहिए।)</option>
-                        <option value="yes_maybe_later">Yes, maybe later. (हाँ, शायद बाद में।)</option>
-                    </select>
+                    <label for="city">आपका शहर (Your City) *</label>
+                    <input type="text" id="city" name="city" required placeholder="उदाहरण: मुंबई" autocomplete="address-level2">
                 </div>
 
                 <button type="submit" class="submit-btn">
-                    🚀 Continue to Step 2 → (अगला चरण)
+                    💬 WhatsApp पर जुड़ें (Connect on WhatsApp)
                 </button>
 
                 <div class="form-footer">
-                    🔒 Your information is 100% secure. No spam, ever.<br>
+                    🔒 आपकी जानकारी 100% सुरक्षित है। No spam, ever.<br>
                     By continuing you agree to our <a href="/terms.php" style="color:#667eea;">Terms</a> and <a href="/privacy.php" style="color:#667eea;">Privacy</a>.
                 </div>
             </form>
@@ -723,29 +917,116 @@ if ($ref) { $_SESSION['ref'] = $ref; }
     </section>
 
     <script>
+        // Store PHP error message (if any)
+        const phpErrorMessage = "<?php echo json_encode($error_message); ?>";
+        
         // Countdown Timer (24 hours from now)
         function startCountdown() {
-            const end = new Date().getTime() + (24 * 60 * 60 * 1000);
-            setInterval(() => {
+            // Check if timer end time is stored, if not, set it 24 hours from now
+            let endTime = localStorage.getItem('countdownEndTime');
+            if (!endTime) {
+                endTime = new Date().getTime() + (24 * 60 * 60 * 1000);
+                localStorage.setItem('countdownEndTime', endTime);
+            } else {
+                endTime = parseInt(endTime);
+            }
+            
+            const hoursEl = document.getElementById('hours');
+            const minutesEl = document.getElementById('minutes');
+            const secondsEl = document.getElementById('seconds');
+
+            if (!hoursEl || !minutesEl || !secondsEl) return; // Exit if elements not found
+
+            const interval = setInterval(() => {
                 const now = new Date().getTime();
-                const distance = end - now;
+                let distance = endTime - now;
+
+                if (distance < 0) {
+                    clearInterval(interval);
+                    distance = 0; // Set to 0 if time ran out
+                    // Optional: Reset timer for 24 hours again if needed
+                    // endTime = new Date().getTime() + (24 * 60 * 60 * 1000);
+                    // localStorage.setItem('countdownEndTime', endTime);
+                    // distance = endTime - now;
+                }
+
                 const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                 const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-                document.getElementById('hours').textContent = String(hours).padStart(2, '0');
-                document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
-                document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+                
+                hoursEl.textContent = String(hours).padStart(2, '0');
+                minutesEl.textContent = String(minutes).padStart(2, '0');
+                secondsEl.textContent = String(seconds).padStart(2, '0');
+
             }, 1000);
         }
         startCountdown();
 
-        // Form validation
-        document.getElementById('formA').addEventListener('submit', function(e) {
-            const email = document.getElementById('best_email').value.trim();
+        // --- MESSAGE BOX FUNCTION (Replaces alert()) ---
+        function showMessageBox(message, isSuccess = false) {
+            const messageBox = document.getElementById('messageBox');
+            const messageText = document.getElementById('messageText');
+
+            if (!messageBox || !messageText) return;
+
+            messageText.textContent = message;
+            messageBox.style.backgroundColor = isSuccess ? '#10b981' : '#ef4444'; // Green for success, Red for error
+            messageBox.style.display = 'block';
+            
+            // Force reflow for fade-in effect
+            void messageBox.offsetWidth; 
+            messageBox.style.opacity = '1';
+
+            // Auto-hide after 4 seconds
+            setTimeout(() => {
+                messageBox.style.opacity = '0';
+                setTimeout(() => {
+                    messageBox.style.display = 'none';
+                }, 300); // Wait for fade out
+            }, 4000);
+        }
+        
+        // Display PHP Error on load if present
+        if (phpErrorMessage && phpErrorMessage !== 'null') {
+            try {
+                // Decode JSON string passed from PHP
+                const message = JSON.parse(phpErrorMessage);
+                showMessageBox(message);
+            } catch (e) {
+                // Fallback in case JSON encoding failed
+                showMessageBox("सबमिशन के दौरान एक अज्ञात त्रुटि हुई। (An unknown error occurred during submission.)");
+            }
+        }
+
+
+        // Form validation (Updated to use showMessageBox)
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            const phone = document.getElementById('phone').value.trim();
+            const email = document.getElementById('email').value.trim();
+            
+            // Simple check for empty fields (though 'required' attribute should handle this)
+            if (!document.getElementById('name').value || !phone || !email || !document.getElementById('city').value) {
+                e.preventDefault();
+                showMessageBox('कृपया सभी आवश्यक फ़ील्ड भरें। (Please fill out all required fields)');
+                return false;
+            }
+
+            // Validate phone number (10 digits)
+            if (!/^[0-9]{10}$/.test(phone)) {
+                e.preventDefault();
+                showMessageBox('कृपया 10 अंकों का सही व्हाट्सएप नंबर डालें। (Please enter a valid 10-digit WhatsApp number)');
+                return false;
+            }
+            
+            // Validate email
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
                 e.preventDefault();
-                alert('Please enter a valid email address.');
+                showMessageBox('कृपया सही ईमेल आईडी डालें। (Please enter a valid email address)');
+                return false;
             }
+            
+            // Client-side validation successful, form will now attempt POST request
         });
 
         // Smooth scroll
@@ -756,6 +1037,23 @@ if ($ref) { $_SESSION['ref'] = $ref; }
                     behavior: 'smooth'
                 });
             });
+        });
+        
+        // Sticky header CTA on scroll
+        window.addEventListener('scroll', function() {
+            const stickyHeaderCta = document.getElementById('stickyHeaderCta');
+            const formSection = document.getElementById('form');
+            if (!stickyHeaderCta || !formSection) return;
+
+            const scrollPosition = window.scrollY;
+            const formPosition = formSection.offsetTop;
+            
+            // Show sticky CTA after scrolling 300px but hide when form is visible
+            if (scrollPosition > 300 && scrollPosition < formPosition - 200) {
+                stickyHeaderCta.classList.add('visible');
+            } else {
+                stickyHeaderCta.classList.remove('visible');
+            }
         });
     </script>
 </body>

@@ -1,7 +1,7 @@
 <?php
 /**
- * Network Marketing CRM - Leads Management
- * Enhanced leads management with network marketing features
+ * Lead Management System for Team Members
+ * User-friendly interface for managing leads and prospects
  */
 
 require_once __DIR__ . '/../includes/init.php';
@@ -11,59 +11,61 @@ require_once __DIR__ . '/../includes/security.php';
 
 // Set security headers
 SecurityHeaders::setAll();
-require_admin();
+require_team_access();
 check_session_timeout();
 
+$user_id = $_SESSION['user_id'];
+
 try {
-$pdo = get_pdo_connection();
+    $pdo = get_pdo_connection();
     
-    // Handle form actions
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['assign_lead'])) {
-            $lead_id = $_POST['lead_id'];
-            $assigned_to = $_POST['assigned_to'];
-            
-            $stmt = $pdo->prepare("UPDATE leads SET assigned_to = ?, updated_at = NOW() WHERE id = ?");
-            $stmt->execute([$assigned_to, $lead_id]);
-            
-            $_SESSION['success_message'] = "Lead assigned successfully!";
-            header('Location: /admin/leads.php');
-        exit;
-    }
-    
-    if (isset($_POST['update_status'])) {
-            $lead_id = $_POST['lead_id'];
-            $status = $_POST['status'];
-            
-            $stmt = $pdo->prepare("UPDATE leads SET status = ?, updated_at = NOW() WHERE id = ?");
-            $stmt->execute([$status, $lead_id]);
-            
-            $_SESSION['success_message'] = "Lead status updated successfully!";
-            header('Location: /admin/leads.php');
-        exit;
-    }
-    
-    if (isset($_POST['update_score'])) {
-            $lead_id = $_POST['lead_id'];
-            $score = $_POST['score'];
-            
-            $stmt = $pdo->prepare("UPDATE leads SET lead_score = ?, updated_at = NOW() WHERE id = ?");
-            $stmt->execute([$score, $lead_id]);
-            
-            $_SESSION['success_message'] = "Lead score updated successfully!";
-            header('Location: /admin/leads.php');
-        exit;
+    // Handle form submissions
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (isset($_POST['action'])) {
+            switch ($_POST['action']) {
+                case 'add_lead':
+                    $name = trim($_POST['name']);
+                    $email = trim($_POST['email']);
+                    $phone = trim($_POST['phone']);
+                    $source = trim($_POST['source']);
+                    $notes = trim($_POST['notes']);
+                    $lead_score = $_POST['lead_score'];
+                    
+                    if ($name && $email) {
+                        $stmt = $pdo->prepare("
+                            INSERT INTO leads (name, email, phone, source, notes, lead_score, assigned_to, status, created_at) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, 'active', NOW())
+                        ");
+                        $stmt->execute([$name, $email, $phone, $source, $notes, $lead_score, $user_id]);
+                        
+                        $_SESSION['success_message'] = "Lead added successfully!";
+                        header('Location: /team/lead-management.php');
+                        exit;
+                    }
+                    break;
+                    
+                case 'update_lead':
+                    $lead_id = $_POST['lead_id'];
+                    $status = $_POST['status'];
+                    $notes = trim($_POST['notes']);
+                    
+                    $stmt = $pdo->prepare("UPDATE leads SET status = ?, notes = ?, updated_at = NOW() WHERE id = ? AND assigned_to = ?");
+                    $stmt->execute([$status, $notes, $lead_id, $user_id]);
+                    
+                    $_SESSION['success_message'] = "Lead updated successfully!";
+                    header('Location: /team/lead-management.php');
+                    exit;
+                    break;
+            }
         }
     }
     
-    // Get filters
+    // Get user's leads
     $filter = $_GET['filter'] ?? 'all';
     $search = $_GET['search'] ?? '';
-    $assigned_to = $_GET['assigned_to'] ?? '';
     
-    // Build query conditions
-    $where_conditions = [];
-    $params = [];
+    $where_conditions = ["assigned_to = ?"];
+    $params = [$user_id];
     
     if ($filter !== 'all') {
         $where_conditions[] = "status = ?";
@@ -76,56 +78,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $params = array_merge($params, [$search_param, $search_param, $search_param]);
     }
     
-    if ($assigned_to) {
-        $where_conditions[] = "assigned_to = ?";
-        $params[] = $assigned_to;
-    }
+    $where_clause = implode(' AND ', $where_conditions);
     
-    $where_clause = !empty($where_conditions) ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
-    
-    // Get leads
     $stmt = $pdo->prepare("
-        SELECT l.*, u.username as assigned_username, u.full_name as assigned_name
-        FROM leads l
-        LEFT JOIN users u ON l.assigned_to = u.id
-        $where_clause
+        SELECT * FROM leads 
+        WHERE $where_clause 
         ORDER BY 
-            CASE l.lead_score 
+            CASE lead_score 
                 WHEN 'HOT' THEN 1 
                 WHEN 'WARM' THEN 2 
                 WHEN 'COLD' THEN 3 
             END, 
-            l.created_at DESC
+            created_at DESC
     ");
     $stmt->execute($params);
     $leads = $stmt->fetchAll();
     
-    // Get team members for filter
-    $team_stmt = $pdo->query("SELECT id, username, full_name FROM users WHERE role = 'team' AND status = 'active' ORDER BY full_name");
-    $team_members = $team_stmt->fetchAll();
-    
     // Get lead statistics
     $stats = [];
-    $stats['total'] = $pdo->query("SELECT COUNT(*) FROM leads")->fetchColumn();
-    $stats['hot'] = $pdo->query("SELECT COUNT(*) FROM leads WHERE lead_score = 'HOT'")->fetchColumn();
-    $stats['warm'] = $pdo->query("SELECT COUNT(*) FROM leads WHERE lead_score = 'WARM'")->fetchColumn();
-    $stats['cold'] = $pdo->query("SELECT COUNT(*) FROM leads WHERE lead_score = 'COLD'")->fetchColumn();
-    $stats['converted'] = $pdo->query("SELECT COUNT(*) FROM leads WHERE status = 'converted'")->fetchColumn();
-    $stats['active'] = $pdo->query("SELECT COUNT(*) FROM leads WHERE status = 'active'")->fetchColumn();
+    $stats['total'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE assigned_to = ?");
+    $stats['total']->execute([$user_id]);
+    $stats['total'] = $stats['total']->fetchColumn();
     
-    Logger::info('Admin leads management accessed', [
-        'user_id' => $_SESSION['user_id'],
+    $stats['hot'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE assigned_to = ? AND lead_score = 'HOT'");
+    $stats['hot']->execute([$user_id]);
+    $stats['hot'] = $stats['hot']->fetchColumn();
+    
+    $stats['warm'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE assigned_to = ? AND lead_score = 'WARM'");
+    $stats['warm']->execute([$user_id]);
+    $stats['warm'] = $stats['warm']->fetchColumn();
+    
+    $stats['cold'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE assigned_to = ? AND lead_score = 'COLD'");
+    $stats['cold']->execute([$user_id]);
+    $stats['cold'] = $stats['cold']->fetchColumn();
+    
+    $stats['converted'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE assigned_to = ? AND status = 'converted'");
+    $stats['converted']->execute([$user_id]);
+    $stats['converted'] = $stats['converted']->fetchColumn();
+    
+    $stats['active'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE assigned_to = ? AND status = 'active'");
+    $stats['active']->execute([$user_id]);
+    $stats['active'] = $stats['active']->fetchColumn();
+    
+    Logger::info('Lead management accessed', [
+        'user_id' => $user_id,
         'filter' => $filter,
         'search' => $search
     ]);
 
 } catch (PDOException $e) {
-    Logger::error('Database error in admin leads management', [
+    Logger::error('Database error in lead management', [
         'error' => $e->getMessage(),
-        'user_id' => $_SESSION['user_id']
+        'user_id' => $user_id
     ]);
     $leads = [];
-    $team_members = [];
     $stats = array_fill_keys(['total', 'hot', 'warm', 'cold', 'converted', 'active'], 0);
 }
 ?>
@@ -134,7 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>👥 Leads Management - Admin Dashboard</title>
+    <title>👥 Lead Management - My Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -167,21 +173,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             box-shadow: 2px 0 20px rgba(0,0,0,0.1);
         }
         
-        .logo {
+        .user-profile {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 15px;
+            color: white;
         }
         
-        .logo h1 {
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
             font-size: 24px;
             font-weight: 800;
-            color: #667eea;
+        }
+        
+        .user-name {
+            font-size: 18px;
+            font-weight: 700;
             margin-bottom: 5px;
         }
         
-        .logo p {
-            color: #666;
+        .user-role {
             font-size: 14px;
+            opacity: 0.8;
         }
         
         .nav-menu {
@@ -312,7 +334,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-weight: 500;
         }
         
-        /* Filters */
+        /* Filters and Search */
         .filters-section {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
@@ -324,7 +346,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         .filters-row {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr auto;
+            grid-template-columns: 1fr 1fr auto;
             gap: 20px;
             align-items: end;
         }
@@ -379,8 +401,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
         }
         
-        /* Table */
-        .table-container {
+        .btn-success {
+            background: linear-gradient(135deg, #00d2d3, #54a0ff);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 210, 211, 0.3);
+        }
+        
+        /* Leads Table */
+        .leads-table-container {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
             border-radius: 20px;
@@ -392,7 +424,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 1000px;
+            min-width: 800px;
         }
         
         .table th {
@@ -476,7 +508,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             padding: 30px;
             border-radius: 20px;
             width: 90%;
-            max-width: 500px;
+            max-width: 600px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
         
@@ -504,20 +536,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         .close:hover {
             color: #333;
-        }
-        
-        /* Success Message */
-        .alert {
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
-        
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
         }
         
         /* Responsive */
@@ -577,6 +595,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: #667eea;
             color: white;
         }
+        
+        /* Success Message */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
     </style>
 </head>
 <body>
@@ -588,34 +620,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="dashboard-container">
         <!-- Sidebar -->
         <nav class="sidebar">
-            <div class="logo">
-                <h1>👥 Leads CRM</h1>
-                <p>Management</p>
+            <div class="user-profile">
+                <div class="user-avatar">
+                    <?php echo strtoupper(substr($_SESSION['username'], 0, 1)); ?>
+                </div>
+                <div class="user-name"><?php echo htmlspecialchars($_SESSION['username']); ?></div>
+                <div class="user-role" data-en="Direct Seller" data-hi="डायरेक्ट सेलर">डायरेक्ट सेलर</div>
             </div>
             
             <ul class="nav-menu">
                 <li class="nav-item">
-                    <a href="/admin/crm-dashboard.php" class="nav-link">
+                    <a href="/team/crm-dashboard.php" class="nav-link">
                         <i class="fas fa-tachometer-alt"></i>
                         <span data-en="Dashboard" data-hi="डैशबोर्ड">डैशबोर्ड</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="/admin/leads.php" class="nav-link active">
+                    <a href="/team/lead-management.php" class="nav-link active">
                         <i class="fas fa-users"></i>
-                        <span data-en="Leads Management" data-hi="लीड्स प्रबंधन">लीड्स प्रबंधन</span>
+                        <span data-en="Lead Management" data-hi="लीड प्रबंधन">लीड प्रबंधन</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="/admin/team.php" class="nav-link">
-                        <i class="fas fa-user-friends"></i>
-                        <span data-en="Team Management" data-hi="टीम प्रबंधन">टीम प्रबंधन</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/analytics.php" class="nav-link">
-                        <i class="fas fa-chart-line"></i>
-                        <span data-en="Analytics" data-hi="विश्लेषण">विश्लेषण</span>
+                    <a href="/team/add-lead.php" class="nav-link">
+                        <i class="fas fa-user-plus"></i>
+                        <span data-en="Add Lead" data-hi="लीड जोड़ें">लीड जोड़ें</span>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -625,13 +654,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </a>
                 </li>
             </ul>
-    </nav>
-    
+        </nav>
+
         <!-- Main Content -->
         <main class="main-content">
             <div class="header">
-                <h1 data-en="Leads Management" data-hi="लीड्स प्रबंधन">लीड्स प्रबंधन</h1>
-                <p data-en="Manage all leads and prospects in your network marketing business" data-hi="अपने नेटवर्क मार्केटिंग व्यवसाय में सभी लीड्स और प्रॉस्पेक्ट्स को प्रबंधित करें">अपने नेटवर्क मार्केटिंग व्यवसाय में सभी लीड्स और प्रॉस्पेक्ट्स को प्रबंधित करें</p>
+                <h1 data-en="Lead Management" data-hi="लीड प्रबंधन">लीड प्रबंधन</h1>
+                <p data-en="Manage your prospects and convert them into customers" data-hi="अपने प्रॉस्पेक्ट्स को प्रबंधित करें और उन्हें ग्राहकों में बदलें">अपने प्रॉस्पेक्ट्स को प्रबंधित करें और उन्हें ग्राहकों में बदलें</p>
             </div>
 
             <!-- Success Message -->
@@ -665,8 +694,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     <div class="stat-value"><?php echo number_format($stats['warm']); ?></div>
                     <div class="stat-label" data-en="🌡️ Warm Leads" data-hi="🌡️ गुनगुने लीड्स">🌡️ गुनगुने लीड्स</div>
-        </div>
-        
+                </div>
+
                 <div class="stat-card cold">
                     <div class="stat-icon cold">
                         <i class="fas fa-snowflake"></i>
@@ -692,7 +721,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
 
-            <!-- Filters -->
+            <!-- Filters and Search -->
             <div class="filters-section">
                 <form method="GET" class="filters-row">
                     <div class="form-group">
@@ -703,18 +732,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <option value="converted" <?php echo $filter === 'converted' ? 'selected' : ''; ?> data-en="Converted" data-hi="रूपांतरित">रूपांतरित</option>
                             <option value="lost" <?php echo $filter === 'lost' ? 'selected' : ''; ?> data-en="Lost" data-hi="खोए हुए">खोए हुए</option>
                         </select>
-        </div>
-        
-                    <div class="form-group">
-                        <label data-en="Assigned To" data-hi="असाइन किया गया">असाइन किया गया</label>
-                        <select name="assigned_to" class="form-control">
-                            <option value="" data-en="All Members" data-hi="सभी सदस्य">सभी सदस्य</option>
-                    <?php foreach ($team_members as $member): ?>
-                                <option value="<?php echo $member['id']; ?>" <?php echo $assigned_to == $member['id'] ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($member['full_name'] ?: $member['username']); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
                     </div>
                     
                     <div class="form-group">
@@ -728,14 +745,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <span data-en="Search" data-hi="खोजें">खोजें</span>
                         </button>
                     </div>
-            </form>
-        </div>
-        
+                </form>
+            </div>
+
             <!-- Leads Table -->
-            <div class="table-container">
+            <div class="leads-table-container">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 style="margin: 0; color: #333;" data-en="All Leads" data-hi="सभी लीड्स">सभी लीड्स</h3>
-                    <span style="color: #666;" data-en="<?php echo count($leads); ?> leads found" data-hi="<?php echo count($leads); ?> लीड्स मिले"><?php echo count($leads); ?> लीड्स मिले</span>
+                    <h3 style="margin: 0; color: #333;" data-en="My Leads" data-hi="मेरे लीड्स">मेरे लीड्स</h3>
+                    <button onclick="openAddLeadModal()" class="btn btn-success">
+                        <i class="fas fa-plus"></i>
+                        <span data-en="Add New Lead" data-hi="नया लीड जोड़ें">नया लीड जोड़ें</span>
+                    </button>
                 </div>
                 
                 <?php if (empty($leads)): ?>
@@ -748,7 +768,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <th data-en="Contact" data-hi="संपर्क">संपर्क</th>
                                 <th data-en="Score" data-hi="स्कोर">स्कोर</th>
                                 <th data-en="Status" data-hi="स्थिति">स्थिति</th>
-                                <th data-en="Assigned To" data-hi="असाइन किया गया">असाइन किया गया</th>
                                 <th data-en="Source" data-hi="स्रोत">स्रोत</th>
                                 <th data-en="Date Added" data-hi="तिथि जोड़ी गई">तिथि जोड़ी गई</th>
                                 <th data-en="Actions" data-hi="कार्य">कार्य</th>
@@ -784,84 +803,121 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <?php echo ucfirst($lead['status']); ?>
                                     </span>
                                 </td>
-                                <td>
-                                    <?php if ($lead['assigned_name']): ?>
-                                        <?php echo htmlspecialchars($lead['assigned_name']); ?>
-                                    <?php else: ?>
-                                        <span style="color: #999;" data-en="Unassigned" data-hi="असाइन नहीं">असाइन नहीं</span>
-                                    <?php endif; ?>
-                                </td>
                                 <td><?php echo htmlspecialchars($lead['source'] ?: 'Direct'); ?></td>
                                 <td><?php echo date('d M Y', strtotime($lead['created_at'])); ?></td>
                                 <td>
-                                    <button onclick="openLeadModal(<?php echo $lead['id']; ?>)" class="btn btn-primary btn-small">
+                                    <button onclick="openUpdateLeadModal(<?php echo $lead['id']; ?>, '<?php echo $lead['status']; ?>', '<?php echo htmlspecialchars($lead['notes'], ENT_QUOTES); ?>')" class="btn btn-primary btn-small">
                                         <i class="fas fa-edit"></i>
-                                        <span data-en="Manage" data-hi="प्रबंधित करें">प्रबंधित करें</span>
+                                        <span data-en="Update" data-hi="अपडेट">अपडेट</span>
                                     </button>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
-            <?php endif; ?>
+                <?php endif; ?>
             </div>
         </main>
     </div>
 
-    <!-- Lead Management Modal -->
-    <div id="leadModal" class="modal">
+    <!-- Add Lead Modal -->
+    <div id="addLeadModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title" data-en="Manage Lead" data-hi="लीड प्रबंधित करें">लीड प्रबंधित करें</h3>
-                <span class="close" onclick="closeLeadModal()">&times;</span>
+                <h3 class="modal-title" data-en="Add New Lead" data-hi="नया लीड जोड़ें">नया लीड जोड़ें</h3>
+                <span class="close" onclick="closeAddLeadModal()">&times;</span>
             </div>
             
-            <form id="leadForm" method="POST">
-                <input type="hidden" name="lead_id" id="leadId">
+            <form method="POST" id="addLeadForm">
+                <input type="hidden" name="action" value="add_lead">
                 
                 <div class="form-group">
-                    <label data-en="Assign to Team Member" data-hi="टीम सदस्य को असाइन करें">टीम सदस्य को असाइन करें</label>
-                    <select name="assigned_to" id="assignedTo" class="form-control">
-                        <option value="" data-en="Unassigned" data-hi="असाइन नहीं">असाइन नहीं</option>
-                        <?php foreach ($team_members as $member): ?>
-                            <option value="<?php echo $member['id']; ?>">
-                                <?php echo htmlspecialchars($member['full_name'] ?: $member['username']); ?>
-                            </option>
-                    <?php endforeach; ?>
-                    </select>
-                    <button type="submit" name="assign_lead" class="btn btn-primary" style="margin-top: 10px;">
-                        <i class="fas fa-user-plus"></i>
-                        <span data-en="Assign Lead" data-hi="लीड असाइन करें">लीड असाइन करें</span>
-                    </button>
+                    <label data-en="Full Name *" data-hi="पूरा नाम *">पूरा नाम *</label>
+                    <input type="text" name="name" class="form-control" required>
                 </div>
                 
-                <hr style="margin: 20px 0;">
+                <div class="form-group">
+                    <label data-en="Email Address *" data-hi="ईमेल पता *">ईमेल पता *</label>
+                    <input type="email" name="email" class="form-control" required>
+                </div>
                 
                 <div class="form-group">
-                    <label data-en="Update Status" data-hi="स्थिति अपडेट करें">स्थिति अपडेट करें</label>
-                    <select name="status" id="leadStatus" class="form-control">
+                    <label data-en="Phone Number" data-hi="फ़ोन नंबर">फ़ोन नंबर</label>
+                    <input type="tel" name="phone" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label data-en="Lead Source" data-hi="लीड स्रोत">लीड स्रोत</label>
+                    <select name="source" class="form-control">
+                        <option value="Website" data-en="Website" data-hi="वेबसाइट">वेबसाइट</option>
+                        <option value="Social Media" data-en="Social Media" data-hi="सोशल मीडिया">सोशल मीडिया</option>
+                        <option value="Referral" data-en="Referral" data-hi="रेफरल">रेफरल</option>
+                        <option value="Cold Call" data-en="Cold Call" data-hi="कोल्ड कॉल">कोल्ड कॉल</option>
+                        <option value="Event" data-en="Event" data-hi="इवेंट">इवेंट</option>
+                        <option value="Other" data-en="Other" data-hi="अन्य">अन्य</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label data-en="Lead Score" data-hi="लीड स्कोर">लीड स्कोर</label>
+                    <select name="lead_score" class="form-control" required>
+                        <option value="HOT" data-en="🔥 HOT - Ready to buy" data-hi="🔥 HOT - खरीदने के लिए तैयार">🔥 HOT - खरीदने के लिए तैयार</option>
+                        <option value="WARM" data-en="🌡️ WARM - Interested" data-hi="🌡️ WARM - रुचि है">🌡️ WARM - रुचि है</option>
+                        <option value="COLD" data-en="❄️ COLD - Initial contact" data-hi="❄️ COLD - प्रारंभिक संपर्क">❄️ COLD - प्रारंभिक संपर्क</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label data-en="Notes" data-hi="नोट्स">नोट्स</label>
+                    <textarea name="notes" class="form-control" rows="3" placeholder="Any additional information about this lead..."></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 20px;">
+                    <button type="button" onclick="closeAddLeadModal()" class="btn" style="background: #6c757d; color: white;">
+                        <span data-en="Cancel" data-hi="रद्द करें">रद्द करें</span>
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i>
+                        <span data-en="Add Lead" data-hi="लीड जोड़ें">लीड जोड़ें</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Update Lead Modal -->
+    <div id="updateLeadModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" data-en="Update Lead Status" data-hi="लीड स्थिति अपडेट करें">लीड स्थिति अपडेट करें</h3>
+                <span class="close" onclick="closeUpdateLeadModal()">&times;</span>
+            </div>
+            
+            <form method="POST" id="updateLeadForm">
+                <input type="hidden" name="action" value="update_lead">
+                <input type="hidden" name="lead_id" id="updateLeadId">
+                
+                <div class="form-group">
+                    <label data-en="Status" data-hi="स्थिति">स्थिति</label>
+                    <select name="status" id="updateStatus" class="form-control" required>
                         <option value="active" data-en="Active" data-hi="सक्रिय">सक्रिय</option>
                         <option value="converted" data-en="Converted" data-hi="रूपांतरित">रूपांतरित</option>
                         <option value="lost" data-en="Lost" data-hi="खोया हुआ">खोया हुआ</option>
                     </select>
-                    <button type="submit" name="update_status" class="btn btn-primary" style="margin-top: 10px;">
-                        <i class="fas fa-check"></i>
-                        <span data-en="Update Status" data-hi="स्थिति अपडेट करें">स्थिति अपडेट करें</span>
-                    </button>
                 </div>
                 
-                <hr style="margin: 20px 0;">
-                
                 <div class="form-group">
-                    <label data-en="Update Lead Score" data-hi="लीड स्कोर अपडेट करें">लीड स्कोर अपडेट करें</label>
-                    <select name="score" id="leadScore" class="form-control">
-                        <option value="HOT" data-en="🔥 HOT" data-hi="🔥 HOT">🔥 HOT</option>
-                        <option value="WARM" data-en="🌡️ WARM" data-hi="🌡️ WARM">🌡️ WARM</option>
-                        <option value="COLD" data-en="❄️ COLD" data-hi="❄️ COLD">❄️ COLD</option>
-                    </select>
-                    <button type="submit" name="update_score" class="btn btn-primary" style="margin-top: 10px;">
-                        <i class="fas fa-star"></i>
-                        <span data-en="Update Score" data-hi="स्कोर अपडेट करें">स्कोर अपडेट करें</span>
+                    <label data-en="Notes" data-hi="नोट्स">नोट्स</label>
+                    <textarea name="notes" id="updateNotes" class="form-control" rows="4" placeholder="Add notes about this lead..."></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 20px;">
+                    <button type="button" onclick="closeUpdateLeadModal()" class="btn" style="background: #6c757d; color: white;">
+                        <span data-en="Cancel" data-hi="रद्द करें">रद्द करें</span>
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        <span data-en="Update Lead" data-hi="लीड अपडेट करें">लीड अपडेट करें</span>
                     </button>
                 </div>
             </form>
@@ -883,20 +939,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Modal functions
-        function openLeadModal(leadId) {
-            document.getElementById('leadId').value = leadId;
-            document.getElementById('leadModal').style.display = 'block';
+        function openAddLeadModal() {
+            document.getElementById('addLeadModal').style.display = 'block';
         }
 
-        function closeLeadModal() {
-            document.getElementById('leadModal').style.display = 'none';
+        function closeAddLeadModal() {
+            document.getElementById('addLeadModal').style.display = 'none';
+            document.getElementById('addLeadForm').reset();
+        }
+
+        function openUpdateLeadModal(leadId, status, notes) {
+            document.getElementById('updateLeadId').value = leadId;
+            document.getElementById('updateStatus').value = status;
+            document.getElementById('updateNotes').value = notes;
+            document.getElementById('updateLeadModal').style.display = 'block';
+        }
+
+        function closeUpdateLeadModal() {
+            document.getElementById('updateLeadModal').style.display = 'none';
         }
 
         // Close modal when clicking outside
         window.onclick = function(event) {
-            const modal = document.getElementById('leadModal');
-            if (event.target === modal) {
-                closeLeadModal();
+            const addModal = document.getElementById('addLeadModal');
+            const updateModal = document.getElementById('updateLeadModal');
+            
+            if (event.target === addModal) {
+                closeAddLeadModal();
+            }
+            if (event.target === updateModal) {
+                closeUpdateLeadModal();
             }
         }
 

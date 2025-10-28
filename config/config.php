@@ -6,15 +6,15 @@ require_once __DIR__ . '/../includes/env.php';
 
 // --- Application Settings ---
 define('SITE_NAME', env('SITE_NAME', 'Spartan Community'));
-define('SITE_URL', env('SITE_URL', 'http://localhost'));
+define('SITE_URL', env('SITE_URL', 'http://www.spartancommunityindia.dishantparihar.com'));
 define('APP_DEBUG', env('APP_DEBUG', false));
 define('TIMEZONE', env('TIMEZONE', 'Asia/Kolkata'));
 
 // --- Database Credentials ---
 define('DB_HOST', env('DB_HOST', 'localhost'));
-define('DB_USER', env('DB_USER', 'root'));
-define('DB_PASS', env('DB_PASS', ''));
-define('DB_NAME', env('DB_NAME', 'spartan'));
+define('DB_USER', env('DB_USER', 'u782093275_awpl'));
+define('DB_PASS', env('DB_PASS', 'Vktmdp@2025'));
+define('DB_NAME', env('DB_NAME', 'u782093275_awpl'));
 
 // --- Security Settings ---
 define('ENCRYPTION_KEY', env('ENCRYPTION_KEY', '')); // Fallback to empty, but should be set in .env

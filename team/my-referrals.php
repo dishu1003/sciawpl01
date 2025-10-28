@@ -1,7 +1,7 @@
 <?php
 /**
- * Direct Selling Business Support - Team Member Dashboard
- * Clean team dashboard focused on lead management and referral tracking
+ * My Referrals - Team Member Interface
+ * Track leads generated through personal referral links
  */
 
 require_once __DIR__ . '/../includes/init.php';
@@ -10,21 +10,14 @@ require_once __DIR__ . '/../includes/logger.php';
 require_once __DIR__ . '/../includes/security.php';
 
 // Set security headers
-function set_default_security_headers() {
-    header('X-Frame-Options: SAMEORIGIN'); 
-    header('X-XSS-Protection: 1; mode=block');
-    header('X-Content-Type-Options: nosniff');
-    header('Referrer-Policy: strict-origin-when-cross-origin');
-    header("Content-Security-Policy: frame-ancestors 'self'");
-}
-
-set_default_security_headers();
+SecurityHeaders::setAll();
 require_team_access();
 check_session_timeout();
 
+$user_id = $_SESSION['user_id'];
+
 try {
-$pdo = get_pdo_connection();
-    $user_id = $_SESSION['user_id'];
+    $pdo = get_pdo_connection();
     
     // Get user information
     $user_stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
@@ -35,90 +28,81 @@ $pdo = get_pdo_connection();
     $referral_code = 'REF' . str_pad($user_id, 6, '0', STR_PAD_LEFT);
     $referral_link = "https://" . $_SERVER['HTTP_HOST'] . "/?ref=" . $referral_code;
     
-    // Team member statistics
+    // Get referral statistics
     $stats = [];
     
-    // Personal lead stats
-    $stats['my_leads'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE assigned_to = ?");
-    $stats['my_leads']->execute([$user_id]);
-    $stats['my_leads'] = $stats['my_leads']->fetchColumn();
+    // Total referral leads
+    $stats['total_referral_leads'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE referral_code = ?");
+    $stats['total_referral_leads']->execute([$referral_code]);
+    $stats['total_referral_leads'] = $stats['total_referral_leads']->fetchColumn();
     
-    $stats['my_hot_leads'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE assigned_to = ? AND lead_score = 'HOT'");
-    $stats['my_hot_leads']->execute([$user_id]);
-    $stats['my_hot_leads'] = $stats['my_hot_leads']->fetchColumn();
+    // Referral leads by score
+    $stats['hot_referral_leads'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE referral_code = ? AND lead_score = 'HOT'");
+    $stats['hot_referral_leads']->execute([$referral_code]);
+    $stats['hot_referral_leads'] = $stats['hot_referral_leads']->fetchColumn();
     
-    $stats['my_warm_leads'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE assigned_to = ? AND lead_score = 'WARM'");
-    $stats['my_warm_leads']->execute([$user_id]);
-    $stats['my_warm_leads'] = $stats['my_warm_leads']->fetchColumn();
+    $stats['warm_referral_leads'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE referral_code = ? AND lead_score = 'WARM'");
+    $stats['warm_referral_leads']->execute([$referral_code]);
+    $stats['warm_referral_leads'] = $stats['warm_referral_leads']->fetchColumn();
     
-    $stats['my_cold_leads'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE assigned_to = ? AND lead_score = 'COLD'");
-    $stats['my_cold_leads']->execute([$user_id]);
-    $stats['my_cold_leads'] = $stats['my_cold_leads']->fetchColumn();
+    $stats['cold_referral_leads'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE referral_code = ? AND lead_score = 'COLD'");
+    $stats['cold_referral_leads']->execute([$referral_code]);
+    $stats['cold_referral_leads'] = $stats['cold_referral_leads']->fetchColumn();
     
-    $stats['my_conversions'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE assigned_to = ? AND status = 'converted'");
-    $stats['my_conversions']->execute([$user_id]);
-    $stats['my_conversions'] = $stats['my_conversions']->fetchColumn();
+    // Referral conversions
+    $stats['referral_conversions'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE referral_code = ? AND status = 'converted'");
+    $stats['referral_conversions']->execute([$referral_code]);
+    $stats['referral_conversions'] = $stats['referral_conversions']->fetchColumn();
     
-    $stats['my_active_leads'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE assigned_to = ? AND status = 'active'");
-    $stats['my_active_leads']->execute([$user_id]);
-    $stats['my_active_leads'] = $stats['my_active_leads']->fetchColumn();
-    
-    // Referral stats
-    $stats['referral_leads'] = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE referral_code = ?");
-    $stats['referral_leads']->execute([$referral_code]);
-    $stats['referral_leads'] = $stats['referral_leads']->fetchColumn();
+    // This month referral leads
+    $stats['this_month_referrals'] = $pdo->prepare("
+        SELECT COUNT(*) FROM leads 
+        WHERE referral_code = ? AND MONTH(created_at) = MONTH(CURDATE()) AND YEAR(created_at) = YEAR(CURDATE())
+    ");
+    $stats['this_month_referrals']->execute([$referral_code]);
+    $stats['this_month_referrals'] = $stats['this_month_referrals']->fetchColumn();
     
     // Performance metrics
-    $stats['conversion_rate'] = $stats['my_leads'] > 0 ? round(($stats['my_conversions'] / $stats['my_leads']) * 100, 2) : 0;
-    $stats['hot_lead_percentage'] = $stats['my_leads'] > 0 ? round(($stats['my_hot_leads'] / $stats['my_leads']) * 100, 2) : 0;
+    $stats['referral_conversion_rate'] = $stats['total_referral_leads'] > 0 ? round(($stats['referral_conversions'] / $stats['total_referral_leads']) * 100, 2) : 0;
     
-    // Recent leads assigned to this user
-    $recent_leads_stmt = $pdo->prepare("
-    SELECT * FROM leads 
-    WHERE assigned_to = ? 
-    ORDER BY created_at DESC
-        LIMIT 10
-    ");
-    $recent_leads_stmt->execute([$user_id]);
-    $recent_leads = $recent_leads_stmt->fetchAll();
-    
-    // Leads from referral link
+    // Get all referral leads
     $referral_leads_stmt = $pdo->prepare("
         SELECT * FROM leads 
         WHERE referral_code = ? 
-        ORDER BY created_at DESC 
-        LIMIT 5
+        ORDER BY created_at DESC
     ");
     $referral_leads_stmt->execute([$referral_code]);
     $referral_leads = $referral_leads_stmt->fetchAll();
     
-    // Monthly performance
-    $monthly_performance = $pdo->prepare("
-        SELECT 
-            DATE_FORMAT(created_at, '%Y-%m') as month,
-            COUNT(*) as leads,
-            COUNT(CASE WHEN status = 'converted' THEN 1 END) as conversions,
-            COUNT(CASE WHEN lead_score = 'HOT' THEN 1 END) as hot_leads
-        FROM leads 
-        WHERE assigned_to = ? AND created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
-        GROUP BY DATE_FORMAT(created_at, '%Y-%m')
-        ORDER BY month DESC
-    ");
-    $monthly_performance->execute([$user_id]);
-    $monthly_stats = $monthly_performance->fetchAll();
+    // Monthly referral trend (last 6 months)
+    $monthly_referral_trend = [];
+    for ($i = 5; $i >= 0; $i--) {
+        $month_start = date('Y-m-01', strtotime("-$i months"));
+        $month_end = date('Y-m-t', strtotime("-$i months"));
+        $month_name = date('M Y', strtotime("-$i months"));
+        
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE referral_code = ? AND created_at >= ? AND created_at <= ?");
+        $stmt->execute([$referral_code, $month_start, $month_end]);
+        $count = $stmt->fetchColumn();
+        
+        $monthly_referral_trend[] = [
+            'month' => $month_name,
+            'count' => $count
+        ];
+    }
     
-    Logger::info('Team member dashboard accessed', [
+    Logger::info('Referral tracking page accessed', [
         'user_id' => $user_id,
-        'username' => $user['username']
+        'referral_code' => $referral_code
     ]);
 
 } catch (PDOException $e) {
-    Logger::error('Database error in team dashboard', [
+    Logger::error('Database error in referral tracking', [
         'error' => $e->getMessage(),
-        'user_id' => $_SESSION['user_id']
+        'user_id' => $user_id
     ]);
-    $stats = array_fill_keys(['my_leads', 'my_hot_leads', 'my_warm_leads', 'my_cold_leads', 'my_conversions', 'my_active_leads', 'referral_leads', 'conversion_rate', 'hot_lead_percentage'], 0);
-    $recent_leads = $referral_leads = $monthly_stats = [];
+    $stats = array_fill_keys(['total_referral_leads', 'hot_referral_leads', 'warm_referral_leads', 'cold_referral_leads', 'referral_conversions', 'this_month_referrals', 'referral_conversion_rate'], 0);
+    $referral_leads = $monthly_referral_trend = [];
     $user = ['username' => 'User', 'full_name' => 'User'];
     $referral_code = 'REF000000';
     $referral_link = '#';
@@ -129,7 +113,7 @@ $pdo = get_pdo_connection();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎯 My Direct Selling Dashboard</title>
+    <title>🔗 My Referrals - My Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -410,15 +394,8 @@ $pdo = get_pdo_connection();
             font-size: 12px;
         }
         
-        /* Content Grid */
-        .content-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-        
-        .card {
+        /* Referral Leads Table */
+        .referral-leads-container {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
             border-radius: 20px;
@@ -426,22 +403,13 @@ $pdo = get_pdo_connection();
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
         
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f1f3f4;
-        }
-        
-        .card-title {
+        .referral-leads-title {
             font-size: 20px;
             font-weight: 700;
             color: #333;
+            margin-bottom: 20px;
         }
         
-        /* Tables */
         .table {
             width: 100%;
             border-collapse: collapse;
@@ -500,7 +468,7 @@ $pdo = get_pdo_connection();
         
         .empty-state {
             text-align: center;
-            padding: 40px;
+            padding: 60px 20px;
             color: #666;
         }
         
@@ -511,12 +479,12 @@ $pdo = get_pdo_connection();
         }
         
         .empty-state h3 {
-            font-size: 18px;
+            font-size: 20px;
             margin-bottom: 10px;
         }
         
         .empty-state p {
-            font-size: 14px;
+            font-size: 16px;
         }
         
         /* Responsive */
@@ -527,10 +495,6 @@ $pdo = get_pdo_connection();
             
             .sidebar {
                 display: none;
-            }
-            
-            .content-grid {
-                grid-template-columns: 1fr;
             }
         }
         
@@ -592,11 +556,11 @@ $pdo = get_pdo_connection();
                 </div>
                 <div class="user-name"><?php echo htmlspecialchars($user['full_name'] ?: $user['username']); ?></div>
                 <div class="user-role" data-en="Direct Seller" data-hi="डायरेक्ट सेलर">डायरेक्ट सेलर</div>
-        </div>
+            </div>
             
             <ul class="nav-menu">
                 <li class="nav-item">
-                    <a href="/team/index.php" class="nav-link active">
+                    <a href="/team/index.php" class="nav-link">
                         <i class="fas fa-tachometer-alt"></i>
                         <span data-en="Dashboard" data-hi="डैशबोर्ड">डैशबोर्ड</span>
                     </a>
@@ -614,7 +578,7 @@ $pdo = get_pdo_connection();
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="/team/my-referrals.php" class="nav-link">
+                    <a href="/team/my-referrals.php" class="nav-link active">
                         <i class="fas fa-link"></i>
                         <span data-en="My Referrals" data-hi="मेरे रेफरल">मेरे रेफरल</span>
                     </a>
@@ -631,8 +595,8 @@ $pdo = get_pdo_connection();
         <!-- Main Content -->
         <main class="main-content">
             <div class="header">
-                <h1 data-en="Welcome Back, <?php echo htmlspecialchars($user['full_name'] ?: $user['username']); ?>!" data-hi="वापसी में स्वागत है, <?php echo htmlspecialchars($user['full_name'] ?: $user['username']); ?>!">वापसी में स्वागत है, <?php echo htmlspecialchars($user['full_name'] ?: $user['username']); ?>!</h1>
-                <p data-en="Track your leads and grow your business" data-hi="अपने लीड्स को ट्रैक करें और अपना बिजनेस बढ़ाएं">अपने लीड्स को ट्रैक करें और अपना बिजनेस बढ़ाएं</p>
+                <h1 data-en="My Referrals" data-hi="मेरे रेफरल">मेरे रेफरल</h1>
+                <p data-en="Track leads generated through your personal referral link" data-hi="अपने व्यक्तिगत रेफरल लिंक के माध्यम से उत्पन्न लीड्स को ट्रैक करें">अपने व्यक्तिगत रेफरल लिंक के माध्यम से उत्पन्न लीड्स को ट्रैक करें</p>
             </div>
 
             <!-- Personal Referral Link -->
@@ -655,57 +619,56 @@ $pdo = get_pdo_connection();
                         </button>
                     </div>
                 </div>
-                <p style="color: #666; font-size: 14px; margin-top: 15px;" data-en="Share this link with potential customers. When they fill the form, the lead will be assigned to you automatically." data-hi="इस लिंक को संभावित ग्राहकों के साथ साझा करें। जब वे फॉर्म भरेंगे, तो लीड आपको स्वचालित रूप से सौंपा जाएगा।">इस लिंक को संभावित ग्राहकों के साथ साझा करें। जब वे फॉर्म भरेंगे, तो लीड आपको स्वचालित रूप से सौंपा जाएगा।</p>
             </div>
 
-            <!-- Personal Statistics -->
+            <!-- Referral Statistics -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon primary">
-                        <i class="fas fa-users"></i>
+                        <i class="fas fa-link"></i>
                     </div>
-                    <div class="stat-value"><?php echo number_format($stats['my_leads']); ?></div>
-                    <div class="stat-label" data-en="My Total Leads" data-hi="मेरे कुल लीड्स">मेरे कुल लीड्स</div>
+                    <div class="stat-value"><?php echo number_format($stats['total_referral_leads']); ?></div>
+                    <div class="stat-label" data-en="Total Referral Leads" data-hi="कुल रेफरल लीड्स">कुल रेफरल लीड्स</div>
                 </div>
 
                 <div class="stat-card hot">
                     <div class="stat-icon hot">
                         <i class="fas fa-fire"></i>
                     </div>
-                    <div class="stat-value"><?php echo number_format($stats['my_hot_leads']); ?></div>
-                    <div class="stat-label" data-en="🔥 Hot Leads" data-hi="🔥 गर्म लीड्स">🔥 गर्म लीड्स</div>
+                    <div class="stat-value"><?php echo number_format($stats['hot_referral_leads']); ?></div>
+                    <div class="stat-label" data-en="🔥 Hot Referrals" data-hi="🔥 गर्म रेफरल">🔥 गर्म रेफरल</div>
                 </div>
 
                 <div class="stat-card warm">
                     <div class="stat-icon warm">
                         <i class="fas fa-thermometer-half"></i>
                     </div>
-                    <div class="stat-value"><?php echo number_format($stats['my_warm_leads']); ?></div>
-                    <div class="stat-label" data-en="🌡️ Warm Leads" data-hi="🌡️ गुनगुने लीड्स">🌡️ गुनगुने लीड्स</div>
+                    <div class="stat-value"><?php echo number_format($stats['warm_referral_leads']); ?></div>
+                    <div class="stat-label" data-en="🌡️ Warm Referrals" data-hi="🌡️ गुनगुने रेफरल">🌡️ गुनगुने रेफरल</div>
                 </div>
 
                 <div class="stat-card cold">
                     <div class="stat-icon cold">
                         <i class="fas fa-snowflake"></i>
                     </div>
-                    <div class="stat-value"><?php echo number_format($stats['my_cold_leads']); ?></div>
-                    <div class="stat-label" data-en="❄️ Cold Leads" data-hi="❄️ ठंडे लीड्स">❄️ ठंडे लीड्स</div>
+                    <div class="stat-value"><?php echo number_format($stats['cold_referral_leads']); ?></div>
+                    <div class="stat-label" data-en="❄️ Cold Referrals" data-hi="❄️ ठंडे रेफरल">❄️ ठंडे रेफरल</div>
                 </div>
 
                 <div class="stat-card success">
                     <div class="stat-icon success">
                         <i class="fas fa-check-circle"></i>
                     </div>
-                    <div class="stat-value"><?php echo number_format($stats['my_conversions']); ?></div>
-                    <div class="stat-label" data-en="✅ Conversions" data-hi="✅ रूपांतरण">✅ रूपांतरण</div>
+                    <div class="stat-value"><?php echo number_format($stats['referral_conversions']); ?></div>
+                    <div class="stat-label" data-en="✅ Referral Conversions" data-hi="✅ रेफरल रूपांतरण">✅ रेफरल रूपांतरण</div>
                 </div>
 
                 <div class="stat-card referral">
                     <div class="stat-icon referral">
-                        <i class="fas fa-link"></i>
+                        <i class="fas fa-calendar-check"></i>
                     </div>
-                    <div class="stat-value"><?php echo number_format($stats['referral_leads']); ?></div>
-                    <div class="stat-label" data-en="Referral Leads" data-hi="रेफरल लीड्स">रेफरल लीड्स</div>
+                    <div class="stat-value"><?php echo number_format($stats['this_month_referrals']); ?></div>
+                    <div class="stat-label" data-en="This Month" data-hi="इस महीने">इस महीने</div>
                 </div>
             </div>
 
@@ -715,120 +678,77 @@ $pdo = get_pdo_connection();
                     <div class="stat-icon primary">
                         <i class="fas fa-percentage"></i>
                     </div>
-                    <div class="stat-value"><?php echo $stats['conversion_rate']; ?>%</div>
-                    <div class="stat-label" data-en="Conversion Rate" data-hi="रूपांतरण दर">रूपांतरण दर</div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-icon hot">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div class="stat-value"><?php echo $stats['hot_lead_percentage']; ?>%</div>
-                    <div class="stat-label" data-en="Hot Lead %" data-hi="गर्म लीड %">गर्म लीड %</div>
+                    <div class="stat-value"><?php echo $stats['referral_conversion_rate']; ?>%</div>
+                    <div class="stat-label" data-en="Referral Conversion Rate" data-hi="रेफरल रूपांतरण दर">रेफरल रूपांतरण दर</div>
                 </div>
             </div>
-            
-            <!-- Content Grid -->
-            <div class="content-grid">
-                <!-- My Recent Leads -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title" data-en="My Recent Leads" data-hi="मेरे हाल के लीड्स">मेरे हाल के लीड्स</h3>
-                        <a href="/team/lead-management.php" class="btn btn-primary btn-small">
-                            <i class="fas fa-eye"></i>
-                            <span data-en="View All" data-hi="सभी देखें">सभी देखें</span>
-                        </a>
-                    </div>
-                    
-                    <?php if (empty($recent_leads)): ?>
-                        <div class="empty-state">
-                            <i class="fas fa-users"></i>
-                            <h3 data-en="No Leads Yet" data-hi="अभी तक कोई लीड नहीं">अभी तक कोई लीड नहीं</h3>
-                            <p data-en="Start adding leads or share your referral link" data-hi="लीड्स जोड़ना शुरू करें या अपना रेफरल लिंक साझा करें">लीड्स जोड़ना शुरू करें या अपना रेफरल लिंक साझा करें</p>
-                        </div>
-                    <?php else: ?>
-                        <table class="table">
-                <thead>
-                    <tr>
-                                    <th data-en="Name" data-hi="नाम">नाम</th>
-                                    <th data-en="Contact" data-hi="संपर्क">संपर्क</th>
-                                    <th data-en="Score" data-hi="स्कोर">स्कोर</th>
-                                    <th data-en="Status" data-hi="स्थिति">स्थिति</th>
-                                    <th data-en="Date" data-hi="तारीख">तारीख</th>
-                    </tr>
-                </thead>
-                <tbody>
-                                <?php foreach ($recent_leads as $lead): ?>
-                                <tr>
-                                    <td>
-                                        <strong><?php echo htmlspecialchars($lead['name']); ?></strong>
-                                        <?php if ($lead['notes']): ?>
-                                            <br><small style="color: #666;"><?php echo htmlspecialchars(substr($lead['notes'], 0, 30)); ?><?php echo strlen($lead['notes']) > 30 ? '...' : ''; ?></small>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <div><?php echo htmlspecialchars($lead['email']); ?></div>
-                                        <?php if ($lead['phone']): ?>
-                                            <div><small><?php echo htmlspecialchars($lead['phone']); ?></small></div>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-<?php echo strtolower($lead['lead_score']); ?>">
-                                            <?php echo $lead['lead_score']; ?>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <?php if ($lead['status'] == 'converted'): ?>
-                                            <span class="badge badge-converted">Converted</span>
-                                        <?php else: ?>
-                                            <span class="badge badge-active">Active</span>
-                                        <?php endif; ?>
-                        </td>
-                                    <td><?php echo date('d M Y', strtotime($lead['created_at'])); ?></td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-                    <?php endif; ?>
-                </div>
 
-                <!-- Referral Leads -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title" data-en="Referral Leads" data-hi="रेफरल लीड्स">रेफरल लीड्स</h3>
+            <!-- Referral Leads List -->
+            <div class="referral-leads-container">
+                <h3 class="referral-leads-title" data-en="All Referral Leads" data-hi="सभी रेफरल लीड्स">सभी रेफरल लीड्स</h3>
+                
+                <?php if (empty($referral_leads)): ?>
+                    <div class="empty-state">
+                        <i class="fas fa-link"></i>
+                        <h3 data-en="No Referral Leads Yet" data-hi="अभी तक कोई रेफरल लीड नहीं">अभी तक कोई रेफरल लीड नहीं</h3>
+                        <p data-en="Share your referral link to start getting leads" data-hi="लीड्स पाना शुरू करने के लिए अपना रेफरल लिंक साझा करें">लीड्स पाना शुरू करने के लिए अपना रेफरल लिंक साझा करें</p>
                     </div>
-                    
-                    <?php if (empty($referral_leads)): ?>
-                        <div class="empty-state">
-                            <i class="fas fa-link"></i>
-                            <h3 data-en="No Referral Leads" data-hi="कोई रेफरल लीड नहीं">कोई रेफरल लीड नहीं</h3>
-                            <p data-en="Share your referral link to get leads" data-hi="लीड्स पाने के लिए अपना रेफरल लिंक साझा करें">लीड्स पाने के लिए अपना रेफरल लिंक साझा करें</p>
-                        </div>
-                    <?php else: ?>
-                        <?php foreach ($referral_leads as $lead): ?>
-                        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 10px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div>
+                <?php else: ?>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th data-en="Name" data-hi="नाम">नाम</th>
+                                <th data-en="Contact" data-hi="संपर्क">संपर्क</th>
+                                <th data-en="Score" data-hi="स्कोर">स्कोर</th>
+                                <th data-en="Status" data-hi="स्थिति">स्थिति</th>
+                                <th data-en="Date" data-hi="तारीख">तारीख</th>
+                                <th data-en="Notes" data-hi="नोट्स">नोट्स</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($referral_leads as $lead): ?>
+                            <tr>
+                                <td>
                                     <strong><?php echo htmlspecialchars($lead['name']); ?></strong>
-                                    <br><small style="color: #666;"><?php echo htmlspecialchars($lead['email']); ?></small>
-                                </div>
-                                <div>
+                                </td>
+                                <td>
+                                    <div><?php echo htmlspecialchars($lead['email']); ?></div>
+                                    <?php if ($lead['phone']): ?>
+                                        <div><small><?php echo htmlspecialchars($lead['phone']); ?></small></div>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
                                     <span class="badge badge-<?php echo strtolower($lead['lead_score']); ?>">
                                         <?php echo $lead['lead_score']; ?>
                                     </span>
-                                </div>
-                            </div>
-                            <div style="margin-top: 8px; font-size: 12px; color: #666;">
-                                <?php echo date('d M Y', strtotime($lead['created_at'])); ?>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
+                                </td>
+                                <td>
+                                    <?php
+                                    $status_badge_class = 'badge-active';
+                                    if ($lead['status'] === 'converted') $status_badge_class = 'badge-converted';
+                                    if ($lead['status'] === 'lost') $status_badge_class = 'badge-hot';
+                                    ?>
+                                    <span class="badge <?php echo $status_badge_class; ?>">
+                                        <?php echo ucfirst($lead['status']); ?>
+                                    </span>
+                                </td>
+                                <td><?php echo date('d M Y', strtotime($lead['created_at'])); ?></td>
+                                <td>
+                                    <?php if ($lead['notes']): ?>
+                                        <small style="color: #666;"><?php echo htmlspecialchars(substr($lead['notes'], 0, 50)); ?><?php echo strlen($lead['notes']) > 50 ? '...' : ''; ?></small>
+                                    <?php else: ?>
+                                        <small style="color: #999;">No notes</small>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
             </div>
         </main>
     </div>
-    
+
     <script>
         // Language switching functionality
         function switchLanguage(lang) {
