@@ -769,73 +769,7 @@ try {
         <i class="fas fa-bars"></i>
     </label>
     <input type="checkbox" id="menu-toggle" aria-controls="sidebar-nav">
-
-    <nav class="dashboard-nav" id="sidebar-nav">
-        <div class="nav-header">
-            <h1>
-                <span class="emoji">🎯</span>
-                <span data-en="Direct Selling" data-hi="डायरेक्ट सेलिंग">डायरेक्ट सेलिंग</span>
-            </h1>
-        </div>
-
-        <div class="user-info">
-            <div class="user-avatar">
-                <?php echo strtoupper(substr($_SESSION['username'], 0, 1)); ?>
-            </div>
-            <div class="user-details">
-                <div class="name"><?php echo htmlspecialchars($_SESSION['username']); ?></div>
-                <div class="role" data-en="Administrator" data-hi="व्यवस्थापक">व्यवस्थापक</div>
-            </div>
-        </div>
-
-        <div class="nav-links">
-            <a href="/admin/" class="active">
-                <i class="fas fa-home"></i>
-                <span data-en="Dashboard" data-hi="डैशबोर्ड">डैशबोर्ड</span>
-            </a>
-            <a href="/admin/leads.php">
-                <i class="fas fa-users"></i>
-                <span data-en="Lead Management" data-hi="लीड प्रबंधन">लीड प्रबंधन</span>
-            </a>
-            <a href="/admin/team.php">
-                <i class="fas fa-user-friends"></i>
-                <span data-en="Team Management" data-hi="टीम प्रबंधन">टीम प्रबंधन</span>
-            </a>
-            <a href="/admin/follow-up-reminders.php">
-                <i class="fas fa-bell"></i>
-                <span data-en="Follow-up" data-hi="फॉलो-अप">फॉलो-अप</span>
-            </a>
-            <a href="/admin/advanced-analytics.php">
-                <i class="fas fa-chart-line"></i>
-                <span data-en="Analytics" data-hi="एनालिटिक्स">एनालिटिक्स</span>
-            </a>
-            <a href="/admin/goal-tracking.php">
-                <i class="fas fa-bullseye"></i>
-                <span data-en="Goals" data-hi="लक्ष्य">लक्ष्य</span>
-            </a>
-            <a href="/admin/bulk-actions.php">
-                <i class="fas fa-tasks"></i>
-                <span data-en="Bulk Actions" data-hi="बल्क एक्शन">बल्क एक्शन</span>
-            </a>
-            <a href="/admin/import-export.php">
-                <i class="fas fa-file-export"></i>
-                <span data-en="Import/Export" data-hi="इम्पोर्ट/एक्सपोर्ट">इम्पोर्ट/एक्सपोर्ट</span>
-            </a>
-            <a href="/admin/integrations.php">
-                <i class="fas fa-plug"></i>
-                <span data-en="Integrations" data-hi="इंटीग्रेशन">इंटीग्रेशन</span>
-            </a>
-            <a href="/logout.php" class="logout">
-                <i class="fas fa-sign-out-alt"></i>
-                <span data-en="Logout" data-hi="लॉग आउट">लॉग आउट</span>
-            </a>
-        </div>
-
-        <button class="nav-toggle-btn" id="nav-toggle-btn">
-            <i class="fas fa-chevron-left"></i>
-            <span data-en="Collapse" data-hi="छिपाएँ">छिपाएँ</span>
-        </button>
-    </nav>
+    <?php include __DIR__ . '/../includes/sidebar.php'; ?>
 
     <div class="dashboard-container" id="main-container">
         <div class="page-header">
@@ -1115,8 +1049,24 @@ try {
                 </div>
             </div>
         </div>
+
+        <div class="content-grid" style="margin-top: 30px;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title" data-en="Lead Status" data-hi="लीड स्थिति">लीड स्थिति</h3>
+                </div>
+                <canvas id="leadStatusChart"></canvas>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title" data-en="Top Performers" data-hi="टॉप परफॉर्मर्स">टॉप परफॉर्मर्स</h3>
+                </div>
+                <canvas id="topPerformersChart"></canvas>
+            </div>
+        </div>
     </div>
 
+    <script src="/assets/js/chart.min.js"></script>
     <script>
         // Language switching functionality
         function switchLanguage(lang, targetButton) {
@@ -1216,6 +1166,32 @@ try {
             // Update time-based greetings
             updateGreeting();
             setInterval(updateGreeting, 60000); // Update every minute
+
+            // Charts
+            var leadStatusCtx = document.getElementById('leadStatusChart').getContext('2d');
+            var leadStatusChart = new Chart(leadStatusCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Hot', 'Warm', 'Cold'],
+                    datasets: [{
+                        data: [<?php echo $stats['hot_leads']; ?>, <?php echo $stats['warm_leads']; ?>, <?php echo $stats['cold_leads']; ?>],
+                        backgroundColor: ['#ff6b6b', '#ffd93d', '#6bcbef'],
+                    }]
+                }
+            });
+
+            var topPerformersCtx = document.getElementById('topPerformersChart').getContext('2d');
+            var topPerformersChart = new Chart(topPerformersCtx, {
+                type: 'bar',
+                data: {
+                    labels: [<?php foreach ($top_team_members as $member) echo "'" . htmlspecialchars($member['full_name'] ?: $member['username']) . "',"; ?>],
+                    datasets: [{
+                        label: 'Total Leads',
+                        data: [<?php foreach ($top_team_members as $member) echo $member['total_leads'] . ","; ?>],
+                        backgroundColor: '#667eea',
+                    }]
+                }
+            });
         });
 
         function updateGreeting() {
