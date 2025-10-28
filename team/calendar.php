@@ -7,9 +7,11 @@ $user_id = $_SESSION['user_id'];
 
 try {
     $pdo = get_pdo_connection();
+  feature-team-management-improvements
     $user_stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
     $user_stmt->execute([$user_id]);
     $user = $user_stmt->fetch();
+main
     $stmt = $pdo->prepare("SELECT r.*, l.name as lead_name FROM reminders r JOIN leads l ON r.lead_id = l.id WHERE r.user_id = ?");
     $stmt->execute([$user_id]);
     $reminders = $stmt->fetchAll();
