@@ -32,6 +32,7 @@ $current_user_id = $_SESSION['user_id'];
 
 check_session_timeout();
 
+$db_status = 'ok';
 try {
     $pdo = get_pdo_connection();
 
@@ -204,6 +205,7 @@ try {
     $team_members = [];
     $upline_options = [];
     $team_stats = array_fill_keys(['total_members', 'active_members', 'total_downlines', 'top_level'], 0);
+    $db_status = 'error';
 }
 ?>
 
