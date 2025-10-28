@@ -10,7 +10,15 @@ require_once __DIR__ . '/../includes/logger.php';
 require_once __DIR__ . '/../includes/security.php';
 
 // Set security headers
-SecurityHeaders::setAll();
+function set_default_security_headers() {
+    header('X-Frame-Options: SAMEORIGIN'); 
+    header('X-XSS-Protection: 1; mode=block');
+    header('X-Content-Type-Options: nosniff');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header("Content-Security-Policy: frame-ancestors 'self'");
+}
+
+set_default_security_headers();
 require_team_access();
 check_session_timeout();
 
@@ -714,7 +722,7 @@ try {
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="/team/goals.php" class="nav-link">
+                    <a href="/team/goal-tracking.php" class="nav-link">
                         <i class="fas fa-target"></i>
                         <span data-en="Goals" data-hi="लक्ष्य">लक्ष्य</span>
                     </a>

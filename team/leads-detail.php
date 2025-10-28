@@ -10,7 +10,9 @@ $lead_id = $_GET['id'] ?? 0;
 
 // Fetch lead (ensure it's assigned to this user)
 $stmt = $pdo->prepare("SELECT * FROM leads WHERE id = ? AND assigned_to = ?");
-$stmt->execute([$lead_id, $user['id']]);
+// --- FIX 1: Changed $user['id'] to $user ---
+// The error indicates $user is a string (the ID), not an array.
+$stmt->execute([$lead_id, $user]);
 $lead = $stmt->fetch();
 
 if (!$lead) {
@@ -45,8 +47,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['set_reminder'])) {
         $reminder_time = $_POST['reminder_time'];
         $stmt = $pdo->prepare("INSERT INTO reminders (lead_id, user_id, reminder_time) VALUES (?, ?, ?)");
-        $stmt->execute([$lead_id, $user['id'], $reminder_time]);
-        header('Location: /team/leads-detail.php?id=' . $lead_id);
+        // --- FIX 2: Changed $user['id'] to $user ---
+        // Applying the same fix as above
+        $stmt->execute([$lead_id, $user, $reminder_time]);
+        
+        // --- FIX 3: Corrected redirect typo (leads-detail -> lead-detail) ---
+        header('Location: /team/lead-detail.php?id=' . $lead_id);
         exit;
     }
 }

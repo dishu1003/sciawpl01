@@ -1,10 +1,15 @@
 <?php
+// --- DEBUGGING: इन 3 लाइनों को अनकमेंट (// हटा दें) करके PHP एरर देखें ---
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
+
 // --- START: CONFIG AND INITIALIZATION ---
-// This block is updated to explicitly include both files, assuming they define the necessary 
+// This block is updated to explicitly include both files, assuming they define the necessary
 // functions (like get_pdo_connection()) and start the session.
 // NOTE: You must ensure these files exist at the paths shown below.
 require_once __DIR__ . '/config/config.php';
-require_once __DIR__ . '/includes/init.php'; 
+require_once __DIR__ . '/includes/init.php';
 
 // 2. Ensure session is running
 if (session_status() === PHP_SESSION_NONE) {
@@ -14,8 +19,8 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Handle referral code
 $ref = $_GET['ref'] ?? ($_SESSION['ref'] ?? null);
-if ($ref) { 
-    $_SESSION['ref'] = $ref; 
+if ($ref) {
+    $_SESSION['ref'] = $ref;
 }
 
 // Initialize error message variable
@@ -29,13 +34,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (function_exists('get_pdo_connection')) {
         try {
             $pdo = get_pdo_connection();
-            
-            $name = trim($_POST['name']);
-            $email = trim($_POST['email']);
-            $phone = trim($_POST['phone']);
-            $city = trim($_POST['city']);
+
+            $name = trim($_POST['name'] ?? ''); // Add null coalescing for safety
+            $email = trim($_POST['email'] ?? '');
+            $phone = trim($_POST['phone'] ?? '');
+            $city = trim($_POST['city'] ?? '');
             $referral_code = $_SESSION['ref'] ?? null;
-            
+
             if ($name && $email && $phone && $city) {
                 // Check if referral code exists and get assigned user
                 $assigned_to = null;
@@ -43,51 +48,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = $pdo->prepare("SELECT id FROM users WHERE referral_code = ? AND role = 'team' AND status = 'active'");
                     $stmt->execute([$referral_code]);
                     $assigned_to = $stmt->fetchColumn();
+                    // If $assigned_to is false (not found), set it back to null
+                    if ($assigned_to === false) {
+                        $assigned_to = null; 
+                    }
                 }
-                
+
                 // Insert lead
                 $stmt = $pdo->prepare("
-                    INSERT INTO leads (name, email, phone, city, source, referral_code, assigned_to, lead_score, status, created_at) 
+                    INSERT INTO leads (name, email, phone, city, source, referral_code, assigned_to, lead_score, status, created_at)
                     VALUES (?, ?, ?, ?, 'Website', ?, ?, 'COLD', 'active', NOW())
                 ");
-                
+
                 // Check if execution was successful
                 if ($stmt->execute([$name, $email, $phone, $city, $referral_code, $assigned_to])) {
                     $submission_successful = true;
-                }
-                
-                if ($submission_successful) {
-                    // Clear referral session
-                    unset($_SESSION['ref']);
-                    
-                    // Create WhatsApp message
-                    $whatsapp_message = urlencode("Know More");
-                    $whatsapp_url = "https://wa.me/919165154400?text={$whatsapp_message}";
-                    
-                    // Redirect to WhatsApp (JS based)
-                    echo "<script>
-                    window.location.href = '{$whatsapp_url}';
-                    </script>";
-                    exit;
                 } else {
                      $error_message = 'डेटाबेस में लीड सेव नहीं हो सकी। कृपया पुनः प्रयास करें। (Could not save lead to the database. Please try again.)';
                 }
+
+                if ($submission_successful) {
+                    // Clear referral session
+                    unset($_SESSION['ref']);
+
+                    // Create WhatsApp message
+                    $whatsapp_message = urlencode("Know More");
+                    $whatsapp_url = "https://wa.me/919165154400?text={$whatsapp_message}";
+
+                    // Redirect to WhatsApp (JS based)
+                    // IMPORTANT: Make sure no HTML or whitespace is echoed before this.
+                    echo "<script>
+                    window.location.href = '{$whatsapp_url}';
+                    </script>";
+                    // Use exit() to prevent the rest of the HTML from rendering
+                    exit;
+                }
+                // No 'else' needed here, $error_message is already set if submission failed
             } else {
-                 $error_message = 'कृपया सुनिश्चित करें कि आपने सभी फ़ील्ड सही ढंग से भरे हैं। (Please ensure all fields are filled correctly.)';
+                $error_message = 'कृपया सुनिश्चित करें कि आपने सभी फ़ील्ड सही ढंग से भरे हैं। (Please ensure all fields are filled correctly.)';
             }
         } catch (PDOException $e) {
             error_log('Lead submission error: ' . $e->getMessage());
             // Check for common Duplicate entry error (error code 23000 in MySQL)
             if ($e->getCode() === '23000' || strpos($e->getMessage(), 'Duplicate entry') !== false) {
-                 $error_message = 'यह ईमेल या फ़ोन नंबर पहले से ही पंजीकृत है। (This email or phone number is already registered.)';
+                $error_message = 'यह ईमेल या फ़ोन नंबर पहले से ही पंजीकृत है। (This email or phone number is already registered.)';
             } else {
-                 $error_message = 'क्षमा करें, सबमिशन में तकनीकी त्रुटि आई है। कृपया व्यवस्थापक से संपर्क करें। (Sorry, a technical error occurred during submission. Please contact administrator.)';
+                $error_message = 'क्षमा करें, सबमिशन में तकनीकी त्रुटि आई है। कृपया व्यवस्थापक से संपर्क करें। (Sorry, a technical error occurred during submission. Please contact administrator.)';
             }
         }
     } else {
         error_log('get_pdo_connection() function is not defined. Check includes/init.php.');
         $error_message = 'Configuration Error: Database connection function is missing (check includes/init.php).';
     }
+    
+    // --- DEBUGGING: इन 2 लाइनों को अनकमेंट (// हटा दें) करके देखें कि PHP में क्या एरर आ रहा है ---
+    // var_dump($error_message);
+    // die("--- End of PHP Debug ---");
 }
 ?>
 <!DOCTYPE html>
@@ -686,7 +702,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             
             <div style="text-align:center; margin-top:30px;">
-                <a href="#form" class->
+                <a href="#form" class="cta-primary">
                     📝 हाँ! मुझे यह चाहिए - Form भरें
                 </a>
             </div>
@@ -880,8 +896,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <p>Get Instant Access to Life-Changing Opportunity</p>
             </div>
 
-            <form method="POST" action="">
-                <input type="hidden" name="ref" value="<?php echo htmlspecialchars($ref ?? ''); ?>">
+            <form method="POST" action="#form"> <!-- Updated action to stay on form -->
 
                 <div class="form-group">
                     <label for="name">आपका नाम (Your Name) *</label>
@@ -918,14 +933,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <script>
         // Store PHP error message (if any)
-        const phpErrorMessage = "<?php echo json_encode($error_message); ?>";
+        const phpErrorMessage = <?php echo json_encode($error_message); ?>;
         
         // Countdown Timer (24 hours from now)
         function startCountdown() {
             // Check if timer end time is stored, if not, set it 24 hours from now
             let endTime = localStorage.getItem('countdownEndTime');
-            if (!endTime) {
-                endTime = new Date().getTime() + (24 * 60 * 60 * 1000);
+            let now = new Date().getTime();
+
+            // If timer doesn't exist or has expired, reset it
+            if (!endTime || endTime < now) {
+                endTime = now + (24 * 60 * 60 * 1000);
                 localStorage.setItem('countdownEndTime', endTime);
             } else {
                 endTime = parseInt(endTime);
@@ -942,12 +960,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 let distance = endTime - now;
 
                 if (distance < 0) {
-                    clearInterval(interval);
-                    distance = 0; // Set to 0 if time ran out
-                    // Optional: Reset timer for 24 hours again if needed
-                    // endTime = new Date().getTime() + (24 * 60 * 60 * 1000);
-                    // localStorage.setItem('countdownEndTime', endTime);
-                    // distance = endTime - now;
+                    // Time expired, reset timer for 24 hours
+                    endTime = new Date().getTime() + (24 * 60 * 60 * 1000);
+                    localStorage.setItem('countdownEndTime', endTime);
+                    distance = endTime - now; 
                 }
 
                 const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -987,15 +1003,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         // Display PHP Error on load if present
-        if (phpErrorMessage && phpErrorMessage !== 'null') {
-            try {
-                // Decode JSON string passed from PHP
-                const message = JSON.parse(phpErrorMessage);
-                showMessageBox(message);
-            } catch (e) {
-                // Fallback in case JSON encoding failed
-                showMessageBox("सबमिशन के दौरान एक अज्ञात त्रुटि हुई। (An unknown error occurred during submission.)");
-            }
+        if (phpErrorMessage) {
+             showMessageBox(phpErrorMessage);
         }
 
 
@@ -1033,9 +1042,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
+                const targetElement = document.querySelector(this.getAttribute('href'));
+                if (targetElement) {
+                     targetElement.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
             });
         });
         
@@ -1049,7 +1061,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const formPosition = formSection.offsetTop;
             
             // Show sticky CTA after scrolling 300px but hide when form is visible
-            if (scrollPosition > 300 && scrollPosition < formPosition - 200) {
+            if (scrollPosition > 300 && scrollPosition < formPosition - window.innerHeight / 2) {
                 stickyHeaderCta.classList.add('visible');
             } else {
                 stickyHeaderCta.classList.remove('visible');
