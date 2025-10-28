@@ -1049,8 +1049,24 @@ try {
                 </div>
             </div>
         </div>
+
+        <div class="content-grid" style="margin-top: 30px;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title" data-en="Lead Status" data-hi="लीड स्थिति">लीड स्थिति</h3>
+                </div>
+                <canvas id="leadStatusChart"></canvas>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title" data-en="Top Performers" data-hi="टॉप परफॉर्मर्स">टॉप परफॉर्मर्स</h3>
+                </div>
+                <canvas id="topPerformersChart"></canvas>
+            </div>
+        </div>
     </div>
 
+    <script src="/assets/js/chart.min.js"></script>
     <script>
         // Language switching functionality
         function switchLanguage(lang, targetButton) {
@@ -1150,6 +1166,32 @@ try {
             // Update time-based greetings
             updateGreeting();
             setInterval(updateGreeting, 60000); // Update every minute
+
+            // Charts
+            var leadStatusCtx = document.getElementById('leadStatusChart').getContext('2d');
+            var leadStatusChart = new Chart(leadStatusCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Hot', 'Warm', 'Cold'],
+                    datasets: [{
+                        data: [<?php echo $stats['hot_leads']; ?>, <?php echo $stats['warm_leads']; ?>, <?php echo $stats['cold_leads']; ?>],
+                        backgroundColor: ['#ff6b6b', '#ffd93d', '#6bcbef'],
+                    }]
+                }
+            });
+
+            var topPerformersCtx = document.getElementById('topPerformersChart').getContext('2d');
+            var topPerformersChart = new Chart(topPerformersCtx, {
+                type: 'bar',
+                data: {
+                    labels: [<?php foreach ($top_team_members as $member) echo "'" . htmlspecialchars($member['full_name'] ?: $member['username']) . "',"; ?>],
+                    datasets: [{
+                        label: 'Total Leads',
+                        data: [<?php foreach ($top_team_members as $member) echo $member['total_leads'] . ","; ?>],
+                        backgroundColor: '#667eea',
+                    }]
+                }
+            });
         });
 
         function updateGreeting() {
